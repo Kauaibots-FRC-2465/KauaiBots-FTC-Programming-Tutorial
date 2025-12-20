@@ -10,7 +10,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
-            .mass(9.65);
+            .mass(9.65); // Added per https://pedropathing.com/docs/pathing/tuning/setup "Setting your robot's mass"
 
     public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);
 
@@ -28,7 +28,7 @@ public class Constants {
     public static Follower createFollower(HardwareMap hardwareMap) {
         return new FollowerBuilder(followerConstants, hardwareMap)
                 .pathConstraints(pathConstraints)
-                .mecanumDrivetrain(driveConstants)
+                .mecanumDrivetrain(driveConstants) // Added per https://pedropathing.com/docs/pathing/tuning/setup "Adding drivetrain constants" - "Mecanum"
                 .build();
     }
 }
