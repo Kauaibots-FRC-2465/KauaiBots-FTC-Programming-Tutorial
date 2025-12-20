@@ -14,16 +14,16 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
-            .mass(9.65);
+            .mass(9.65); // Added per https://pedropathing.com/docs/pathing/tuning/setup "Setting your robot's mass"
 
     public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);
 
     public static MecanumConstants driveConstants = new MecanumConstants()
             .maxPower(1.0d)
-            .rightFrontMotorName("rightFront")
-            .leftFrontMotorName("leftFront")
-            .rightRearMotorName("rightBack")
-            .leftRearMotorName("leftBack")
+            .rightFrontMotorName("rightFront") // The name we gave to the right front mecanum motor in the Robot Configuration
+            .leftFrontMotorName("leftFront") // The name we gave to the left front mecanum motor in the Robot Configuration
+            .rightRearMotorName("rightBack")  // The name we gave to the right rear mecanum motor in the Robot Configuration
+            .leftRearMotorName("leftBack")  // The name we gave to the left rear mecanum motor in the Robot Configuration
             .rightFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
             .leftFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
             .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)
@@ -41,7 +41,7 @@ public class Constants {
         return new FollowerBuilder(followerConstants, hardwareMap)
                 .pinpointLocalizer(localizerConstants)
                 .pathConstraints(pathConstraints)
-                .mecanumDrivetrain(driveConstants)
+                .mecanumDrivetrain(driveConstants) // Added per https://pedropathing.com/docs/pathing/tuning/setup "Adding drivetrain constants" - "Mecanum"
                 .build();
     }
 }
