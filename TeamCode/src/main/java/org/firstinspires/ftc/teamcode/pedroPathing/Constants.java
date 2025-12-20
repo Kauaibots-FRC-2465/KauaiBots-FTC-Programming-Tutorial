@@ -18,15 +18,6 @@ public class Constants {
 
     public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);
 
-    public static PinpointConstants localizerConstants = new PinpointConstants()
-            .forwardPodY(130.0d)
-            .strafePodX(213.0d)
-            .distanceUnit(DistanceUnit.MM)
-            .hardwareMapName("odo1")
-            .encoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD)
-            .forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD)
-            .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD);
-    
     public static MecanumConstants driveConstants = new MecanumConstants()
             .maxPower(1.0d)
             .rightFrontMotorName("rightFront")
@@ -38,6 +29,14 @@ public class Constants {
             .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)
             .leftRearMotorDirection(DcMotorSimple.Direction.REVERSE);
 
+    public static PinpointConstants localizerConstants = new PinpointConstants()
+            .forwardPodY(130.0d) // The forward/backward (center of left rail) pod is 130mm left of center
+            .strafePodX(213.0d) // The left/right pod (front left rail) is 213mm forward of center
+            .distanceUnit(DistanceUnit.MM) // We decided to measure in mm rather than inches
+            .hardwareMapName("odo1") // The name we gave to the odometry computer in the Robot Configuration
+            .encoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD)
+            .forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD)
+            .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD);
     public static Follower createFollower(HardwareMap hardwareMap) {
         return new FollowerBuilder(followerConstants, hardwareMap)
                 .pinpointLocalizer(localizerConstants)
