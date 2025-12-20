@@ -15,6 +15,13 @@
 apply from: '../build.common.gradle'
 apply from: '../build.dependencies.gradle'
 
+// Add Fastload library to Gradle JVM so it is available in Gradle
+buildscript {
+    apply from: 'ftc-fast-load-classpath.gradle', to: buildscript
+}
+// Apply the plugin to Gradle and add ftc-fast-load classes to the project for use by the plugin
+apply from: "ftc-fast-load-plugin.gradle"
+
 android {
     namespace = 'org.firstinspires.ftc.teamcode'
 

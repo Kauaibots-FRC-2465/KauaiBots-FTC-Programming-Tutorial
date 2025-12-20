@@ -1,0 +1,11 @@
+      apply plugin: 'org.team11260.fast-load-plugin'
+
+      repositories {
+          maven {
+               url = 'https://www.matthewo.tech/maven/'
+           }
+      }
+
+      dependencies {
+          implementation 'org.team11260:fast-load:0.1.4-beta1'
+      }
