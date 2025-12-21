@@ -27,6 +27,7 @@ public class Constants {
             /*near  */.secondaryHeadingPIDFCoefficients(new PIDFCoefficients(1.0d, 0.0d, 0.06d, 0.07d))  // Added per https://pedropathing.com/docs/pathing/tuning/pids/heading *Update Tuned values Into Your Code*
             /*switch*/.headingPIDFSwitch(40.0d*(Math.PI/180.0d)) // Left out of the documentation, add it ourselves.
             .useSecondaryDrivePIDF(true); // Added per https://pedropathing.com/docs/pathing/tuning/pids *Dual PID System*
+
     public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);
 
     public static MecanumConstants driveConstants = new MecanumConstants()
@@ -50,6 +51,7 @@ public class Constants {
             .encoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD)
             .forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD)
             .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD);
+
     public static Follower createFollower(HardwareMap hardwareMap) {
         return new FollowerBuilder(followerConstants, hardwareMap)
                 .pinpointLocalizer(localizerConstants)
