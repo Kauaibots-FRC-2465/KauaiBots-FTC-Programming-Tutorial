@@ -15,7 +15,6 @@ import com.bylazar.field.PanelsField;
 import com.bylazar.field.Style;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
-import com.pedropathing.ErrorCalculator;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.*;
 import com.pedropathing.math.*;
@@ -741,11 +740,9 @@ class LateralZeroPowerAccelerationTuner extends OpMode {
  * @version 1.0, 3/12/2024
  */
 class TranslationalTuner extends OpMode {
-    public static double DISTANCE = 40;
-    private boolean forward = true;
+    private double impulseDistance = 2;
 
-    private Path forwards;
-    private Path backwards;
+    private Path testPath;
 
     @Override
     public void init() {
@@ -756,7 +753,9 @@ class TranslationalTuner extends OpMode {
     @Override
     public void init_loop() {
         telemetryM.debug("This will activate the translational PIDF(s)");
-        telemetryM.debug("The robot will try to stay in place while you push it laterally.");
+        telemetryM.debug("The robot will be be virtually pushed 6 inches off its path laterally when you press dpad left/right.");
+        telemetryM.debug("You can push the robot manually if you prefer.");
+        telemetryM.debug("You can adjust the push distance in 0.5 ich increments by pressing dpad up/down.");
         telemetryM.debug("You can adjust the PIDF values to tune the robot's translational PIDF(s).");
         telemetryM.update(telemetry);
         follower.update();
@@ -767,11 +766,13 @@ class TranslationalTuner extends OpMode {
     public void start() {
         follower.deactivateAllPIDFs();
         follower.activateTranslational();
-        forwards = new Path(new BezierLine(new Pose(72,72), new Pose(DISTANCE + 72,72)));
-        forwards.setConstantHeadingInterpolation(0);
-        backwards = new Path(new BezierLine(new Pose(DISTANCE + 72,72), new Pose(72,72)));
-        backwards.setConstantHeadingInterpolation(0);
-        follower.followPath(forwards);
+        testPath = new Path(new BezierLine(new Pose(72,72), new Pose(72 + 72,72)));
+        testPath.setConstantHeadingInterpolation(0);
+        testPath.setTValueConstraint(2);
+        testPath.setVelocityConstraint(0);
+        testPath.setTranslationalConstraint(0);
+        testPath.setHeadingConstraint(0);
+        follower.followPath(testPath);
     }
 
     /** This runs the OpMode, updating the Follower as well as printing out the debug statements to the Telemetry */
@@ -780,17 +781,21 @@ class TranslationalTuner extends OpMode {
         follower.update();
         draw();
 
-        if (!follower.isBusy()) {
-            if (forward) {
-                forward = false;
-                follower.followPath(backwards);
-            } else {
-                forward = true;
-                follower.followPath(forwards);
-            }
+        if (gamepad1.dpadLeftWasPressed())
+        {
+            follower.setPose(new Pose(72, 72+impulseDistance).withHeading(0));
+            follower.followPath(testPath);
         }
+        if (gamepad1.dpadRightWasPressed())
+        {
+            follower.setPose(new Pose(72, 72-impulseDistance).withHeading(0));
+            follower.followPath(testPath);
+        }
+        if (gamepad1.dpadUpWasPressed()) impulseDistance+=.5;
+        if (gamepad1.dpadDownWasPressed() && impulseDistance > 0) impulseDistance-=.5;
 
-        telemetryM.debug("Push the robot laterally to test the Translational PIDF(s).");
+        telemetryM.debug("Push dpad left/right to test the Translational PIDF(s).");
+        telemetryM.debug("Push dpad up/down to adjust test distance by 0.5 inches: "+impulseDistance+" inches");
         telemetryM.addData("Zero Line", 0);
         telemetryM.addData("Error X", follower.errorCalculator.getTranslationalError().getXComponent());
         telemetryM.addData("Error Y", follower.errorCalculator.getTranslationalError().getYComponent());
