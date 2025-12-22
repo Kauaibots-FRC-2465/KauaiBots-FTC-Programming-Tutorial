@@ -18,8 +18,8 @@ public class Constants {
             .maxPower(1.0d)
             .rightFrontMotorName("rightFront") // The name we gave to the right front mecanum motor in the Robot Configuration
             .leftFrontMotorName("leftFront") // The name we gave to the left front mecanum motor in the Robot Configuration
-            .rightRearMotorName("rightBack")  // The name we gave to the right rear mecanum motor in the Robot Configuration
-            .leftRearMotorName("leftBack")  // The name we gave to the left rear mecanum motor in the Robot Configuration
+            .rightRearMotorName("rightRear")  // The name we gave to the right rear mecanum motor in the Robot Configuration
+            .leftRearMotorName("leftRear")  // The name we gave to the left rear mecanum motor in the Robot Configuration
             .rightFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
             .leftFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
             .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)
