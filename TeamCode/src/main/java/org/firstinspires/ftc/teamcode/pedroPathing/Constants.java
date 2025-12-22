@@ -20,9 +20,9 @@ public class Constants {
             .forwardZeroPowerAcceleration(-29.0d) // Added per https://pedropathing.com/docs/pathing/tuning/automatic "Forward Zero Power Acceleration"
             .lateralZeroPowerAcceleration(-50.0d)  // Added per https://pedropathing.com/docs/pathing/tuning/automatic "Lateral Zero Power Acceleration"
             .useSecondaryTranslationalPIDF(true) // Added per https://pedropathing.com/docs/pathing/tuning/pids *Dual PID System*
-            /*far   */.translationalPIDFCoefficients(new PIDFCoefficients(1d, 0.0d, 0.0d, 0.0d))  // Added per https://pedropathing.com/docs/pathing/tuning/pids/translational *Update Tuned values Into Your Code*
-            /*near  */.secondaryTranslationalPIDFCoefficients(new PIDFCoefficients(0.05d, 0.0d, 0.006d, 0.07d))  // Added per https://pedropathing.com/docs/pathing/tuning/pids/translational *Update Tuned values Into Your Code*
-            /*switch*/.translationalPIDFSwitch(10.0d) // Left out of the documentation, add it ourselves.
+            /*far   */.translationalPIDFCoefficients(new PIDFCoefficients(0.05d, 0.0d, 0.006d, 0.11d))  // Added per https://pedropathing.com/docs/pathing/tuning/pids/translational *Update Tuned values Into Your Code*
+            /*near  */.secondaryTranslationalPIDFCoefficients(new PIDFCoefficients(0d, 0.0d, 0d, 0d))  // Added per https://pedropathing.com/docs/pathing/tuning/pids/translational *Update Tuned values Into Your Code*
+            /*switch*/.translationalPIDFSwitch(0.10d) // Left out of the documentation, add it ourselves.
             .useSecondaryHeadingPIDF(true) // Added per https://pedropathing.com/docs/pathing/tuning/pids *Dual PID System*
             /*far   */.headingPIDFCoefficients(new PIDFCoefficients(2.0d, 0.0d, 0.0d, 0.0d)) // Added per https://pedropathing.com/docs/pathing/tuning/pids/heading *Update Tuned values Into Your Code*
             /*near  */.secondaryHeadingPIDFCoefficients(new PIDFCoefficients(1.0d, 0.0d, 0.06d, 0.07d))  // Added per https://pedropathing.com/docs/pathing/tuning/pids/heading *Update Tuned values Into Your Code*
