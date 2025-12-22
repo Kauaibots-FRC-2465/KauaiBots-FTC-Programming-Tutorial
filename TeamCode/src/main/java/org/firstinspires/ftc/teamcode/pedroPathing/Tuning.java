@@ -752,10 +752,9 @@ class TranslationalTuner extends OpMode {
     /** This initializes the Follower and creates the forward and backward Paths. */
     @Override
     public void init_loop() {
-        telemetryM.debug("This will activate the translational PIDF(s)");
-        telemetryM.debug("The robot will be be virtually pushed 6 inches off its path laterally when you press dpad left/right.");
-        telemetryM.debug("You can push the robot manually if you prefer.");
-        telemetryM.debug("You can adjust the push distance in 0.5 ich increments by pressing dpad up/down.");
+        telemetryM.debug("This will activate the translational PIDF(s) only.");
+        telemetryM.debug("dpad left/right will virtually push the robot off its path.");
+        telemetryM.debug("dpad up/down will adjust the push distance (default 6 inches) in 0.25 inch increments.");
         telemetryM.debug("You can adjust the PIDF values to tune the robot's translational PIDF(s).");
         telemetryM.update(telemetry);
         follower.update();
@@ -766,7 +765,7 @@ class TranslationalTuner extends OpMode {
     public void start() {
         follower.deactivateAllPIDFs();
         follower.activateTranslational();
-        testPath = new Path(new BezierLine(new Pose(72,72), new Pose(72 + 72,72)));
+        testPath = new Path(new BezierLine(new Pose(72+6,72), new Pose(72-6,72)));
         testPath.setConstantHeadingInterpolation(0);
         testPath.setTValueConstraint(2);
         testPath.setVelocityConstraint(0);
@@ -781,21 +780,21 @@ class TranslationalTuner extends OpMode {
         follower.update();
         draw();
 
-        if (gamepad1.dpadLeftWasPressed())
+        if (gamepad1.dpadRightWasPressed())
         {
             follower.setPose(new Pose(72, 72+impulseDistance).withHeading(0));
             follower.followPath(testPath);
         }
-        if (gamepad1.dpadRightWasPressed())
+        if (gamepad1.dpadLeftWasPressed())
         {
             follower.setPose(new Pose(72, 72-impulseDistance).withHeading(0));
             follower.followPath(testPath);
         }
-        if (gamepad1.dpadUpWasPressed()) impulseDistance+=.5;
-        if (gamepad1.dpadDownWasPressed() && impulseDistance > 0) impulseDistance-=.5;
+        if (gamepad1.dpadUpWasPressed()) impulseDistance+=.25;
+        if (gamepad1.dpadDownWasPressed() && impulseDistance > 0) impulseDistance-=.25;
 
         telemetryM.debug("Push dpad left/right to test the Translational PIDF(s).");
-        telemetryM.debug("Push dpad up/down to adjust test distance by 0.5 inches: "+impulseDistance+" inches");
+        telemetryM.debug("Push dpad up/down to adjust test distance by 0.25 inches: "+impulseDistance+" inches");
         telemetryM.addData("Zero Line", 0);
         telemetryM.addData("Error X", follower.errorCalculator.getTranslationalError().getXComponent());
         telemetryM.addData("Error Y", follower.errorCalculator.getTranslationalError().getYComponent());
