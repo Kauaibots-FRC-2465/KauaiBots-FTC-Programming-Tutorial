@@ -741,11 +741,9 @@ class LateralZeroPowerAccelerationTuner extends OpMode {
  * @version 1.0, 3/12/2024
  */
 class TranslationalTuner extends OpMode {
-    public static double DISTANCE = 40;
-    private boolean forward = true;
+    private double impulseDistance = 2;
 
-    private Path forwards;
-    private Path backwards;
+    private Path testPath;
 
     @Override
     public void init() {
@@ -755,8 +753,9 @@ class TranslationalTuner extends OpMode {
     /** This initializes the Follower and creates the forward and backward Paths. */
     @Override
     public void init_loop() {
-        telemetryM.debug("This will activate the translational PIDF(s)");
-        telemetryM.debug("The robot will try to stay in place while you push it laterally.");
+        telemetryM.debug("This will activate the translational PIDF(s) only.");
+        telemetryM.debug("dpad left/right will virtually push the robot off its path.");
+        telemetryM.debug("dpad up/down will adjust the push distance (default 6 inches) in 0.25 inch increments.");
         telemetryM.debug("You can adjust the PIDF values to tune the robot's translational PIDF(s).");
         telemetryM.update(telemetry);
         follower.update();
@@ -767,11 +766,13 @@ class TranslationalTuner extends OpMode {
     public void start() {
         follower.deactivateAllPIDFs();
         follower.activateTranslational();
-        forwards = new Path(new BezierLine(new Pose(72,72), new Pose(DISTANCE + 72,72)));
-        forwards.setConstantHeadingInterpolation(0);
-        backwards = new Path(new BezierLine(new Pose(DISTANCE + 72,72), new Pose(72,72)));
-        backwards.setConstantHeadingInterpolation(0);
-        follower.followPath(forwards);
+        testPath = new Path(new BezierLine(new Pose(72+6,72), new Pose(72-6,72)));
+        testPath.setConstantHeadingInterpolation(0);
+        testPath.setTValueConstraint(2);
+        testPath.setVelocityConstraint(0);
+        testPath.setTranslationalConstraint(0);
+        testPath.setHeadingConstraint(0);
+        follower.followPath(testPath);
     }
 
     /** This runs the OpMode, updating the Follower as well as printing out the debug statements to the Telemetry */
@@ -780,17 +781,21 @@ class TranslationalTuner extends OpMode {
         follower.update();
         draw();
 
-        if (!follower.isBusy()) {
-            if (forward) {
-                forward = false;
-                follower.followPath(backwards);
-            } else {
-                forward = true;
-                follower.followPath(forwards);
-            }
+        if (gamepad1.dpadRightWasPressed())
+        {
+            follower.setPose(new Pose(72, 72+impulseDistance).withHeading(0));
+            follower.followPath(testPath);
         }
+        if (gamepad1.dpadLeftWasPressed())
+        {
+            follower.setPose(new Pose(72, 72-impulseDistance).withHeading(0));
+            follower.followPath(testPath);
+        }
+        if (gamepad1.dpadUpWasPressed()) impulseDistance+=.25;
+        if (gamepad1.dpadDownWasPressed() && (impulseDistance-.25)>0) impulseDistance-=.25;
 
-        telemetryM.debug("Push the robot laterally to test the Translational PIDF(s).");
+        telemetryM.debug("Push dpad left/right to test the Translational PIDF(s).");
+        telemetryM.debug("Push dpad up/down to adjust test distance by 0.25 inches: "+impulseDistance+" inches");
         telemetryM.addData("Zero Line", 0);
         telemetryM.addData("Error X", follower.errorCalculator.getTranslationalError().getXComponent());
         telemetryM.addData("Error Y", follower.errorCalculator.getTranslationalError().getYComponent());
@@ -810,11 +815,9 @@ class TranslationalTuner extends OpMode {
  * @version 1.0, 3/12/2024
  */
 class HeadingTuner extends OpMode {
-    public static double DISTANCE = 40;
-    private boolean forward = true;
+    public static double impulseRotation = Math.toRadians(45);
 
-    private Path forwards;
-    private Path backwards;
+    private Path testPath;
 
     @Override
     public void init() {
@@ -828,7 +831,8 @@ class HeadingTuner extends OpMode {
     @Override
     public void init_loop() {
         telemetryM.debug("This will activate the heading PIDF(s).");
-        telemetryM.debug("The robot will try to stay at a constant heading while you try to turn it.");
+        telemetryM.debug("dpad left/right will virtually rotate the robot off its path.");
+        telemetryM.debug("dpad up/down will adjust the rotation angle (default 45 degrees) in 1 degree increments.");
         telemetryM.debug("You can adjust the PIDF values to tune the robot's heading PIDF(s).");
         telemetryM.update(telemetry);
         follower.update();
@@ -839,11 +843,13 @@ class HeadingTuner extends OpMode {
     public void start() {
         follower.deactivateAllPIDFs();
         follower.activateHeading();
-        forwards = new Path(new BezierLine(new Pose(72,72), new Pose(DISTANCE + 72,72)));
-        forwards.setConstantHeadingInterpolation(0);
-        backwards = new Path(new BezierLine(new Pose(DISTANCE + 72,72), new Pose(72,72)));
-        backwards.setConstantHeadingInterpolation(0);
-        follower.followPath(forwards);
+        testPath = new Path(new BezierLine(new Pose(72+6,72), new Pose(72-6,72)));
+        testPath.setConstantHeadingInterpolation(0);
+        testPath.setTValueConstraint(2);
+        testPath.setVelocityConstraint(0);
+        testPath.setTranslationalConstraint(0);
+        testPath.setHeadingConstraint(0);
+        follower.followPath(testPath);
     }
 
     /**
@@ -855,19 +861,23 @@ class HeadingTuner extends OpMode {
         follower.update();
         draw();
 
-        if (!follower.isBusy()) {
-            if (forward) {
-                forward = false;
-                follower.followPath(backwards);
-            } else {
-                forward = true;
-                follower.followPath(forwards);
-            }
+        if (gamepad1.dpadRightWasPressed())
+        {
+            follower.setPose(new Pose(72, 72).withHeading(impulseRotation));
+            follower.followPath(testPath);
         }
+        if (gamepad1.dpadLeftWasPressed())
+        {
+            follower.setPose(new Pose(72, 72).withHeading(-impulseRotation));
+            follower.followPath(testPath);
+        }
+        if (gamepad1.dpadUpWasPressed()) impulseRotation+=Math.toRadians(1);
+        if (gamepad1.dpadDownWasPressed() && (impulseRotation-Math.toRadians(1))>0) impulseRotation-=Math.toRadians(1);
 
-        telemetryM.debug("Turn the robot manually to test the Heading PIDF(s).");
+        telemetryM.debug("Push dpad left/right to test the Rotational PIDF(s).");
+        telemetryM.debug("Push dpad up/down to adjust test rotation by 1 degrees: "+Math.toDegrees(impulseRotation)+" degrees");
         telemetryM.addData("Zero Line", 0);
-        telemetryM.addData("Error", follower.errorCalculator.getHeadingError());
+        telemetryM.addData("Error", Math.toDegrees(follower.errorCalculator.getHeadingError()));
         telemetryM.update(telemetry);
     }
 }
