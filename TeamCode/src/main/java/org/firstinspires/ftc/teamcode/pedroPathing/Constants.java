@@ -16,10 +16,9 @@ public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
             .mass(9.65) // Added per https://pedropathing.com/docs/pathing/tuning/setup "Setting your robot's mass"
             .forwardZeroPowerAcceleration(-29.0d) // Added per https://pedropathing.com/docs/pathing/tuning/automatic "Forward Zero Power Acceleration"
-            .lateralZeroPowerAcceleration(-50.0d)  // Added per https://pedropathing.com/docs/pathing/tuning/automatic "Lateral Zero Power Acceleration"
+            .lateralZeroPowerAcceleration(-60.0d) // Added per https://pedropathing.com/docs/pathing/tuning/automatic "Lateral Zero Power Acceleration"
             .useSecondaryTranslationalPIDF(true) // Added per https://pedropathing.com/docs/pathing/tuning/pids *Dual PID System*
-            .useSecondaryHeadingPIDF(true) // Added per https://pedropathing.com/docs/pathing/tuning/pids *Dual PID System*
-            .useSecondaryDrivePIDF(true); // Added per https://pedropathing.com/docs/pathing/tuning/pids *Dual PID System*
+            .useSecondaryHeadingPIDF(true); // Added per https://pedropathing.com/docs/pathing/tuning/pids *Dual PID System*
 
     public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);
 
@@ -33,8 +32,8 @@ public class Constants {
             .leftFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
             .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)
             .leftRearMotorDirection(DcMotorSimple.Direction.REVERSE)
-            .xVelocity(64.3d) // Added per https://pedropathing.com/docs/pathing/tuning/automatic "Forward Velocity Tuner"
-            .yVelocity(52.3d);  // Added per https://pedropathing.com/docs/pathing/tuning/automatic "Lateral Velocity Tuner"
+            .xVelocity(60d) // Added per https://pedropathing.com/docs/pathing/tuning/automatic "Forward Velocity Tuner"
+            .yVelocity(46d);  // Added per https://pedropathing.com/docs/pathing/tuning/automatic "Lateral Velocity Tuner"
 
     public static PinpointConstants localizerConstants = new PinpointConstants()
             .forwardPodY(130.0d) // The forward/backward (center of left rail) pod is 130mm left of center
