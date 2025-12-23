@@ -19,7 +19,7 @@ import com.pedropathing.util.PoseHistory;
  * @author Anyi Lin - 10158 Scott's Bots
  * @version 2.0, 11/03/2025
  */
-    public class Drawing {
+public class Drawing {
     public static final double ROBOT_RADIUS = 9;
     private static TelemetryPacket packet;
 
