@@ -907,9 +907,9 @@ class DriveTuner extends OpMode {
      */
     @Override
     public void init_loop() {
-        telemetryM.debug("This will run the robot in a straight line going inches forward.");
-        telemetryM.debug("The robot will go forward and backward continuously along the path.");
-        telemetryM.debug("Make sure you have enough room.");
+        telemetryM.debug("This will run the robot in a straight line going inches forward without heading or translational correction.");
+        telemetryM.debug("Push dpad left/right to drive forward/backward by 12 inches.");
+        telemetryM.debug("Push dpad up/down to adjust the test distance by 1 inch.");
         telemetryM.update(telemetry);
         follower.update();
         drawOnlyCurrent();
@@ -965,8 +965,8 @@ class DriveTuner extends OpMode {
         if (gamepad1.dpadUpWasPressed()) impulseDistance+=1;
         if (gamepad1.dpadDownWasPressed() && impulseDistance-1 > 0) impulseDistance-=1;
 
-        telemetryM.addLine("Push dpad left/right to test the Drive PIDF(s).");
-        telemetryM.addLine("Push dpad up/down to adjust test distance by 1 inches: "+impulseDistance+" inches");
+        telemetryM.addLine("Push dpad left/right to test the Drive PIDF(s) by driving "+impulseDistance+" inches.");
+        telemetryM.addLine("Push dpad up/down to adjust test distance by 1 inches.");
         telemetryM.addData("Zero Line", 0);
         telemetryM.addData("Velocity Error (inches/sec)", follower.errorCalculator.getDriveErrors()[1]);
         telemetryM.addData("Position Error (inches): ", follower.getCurrentPath().getDistanceRemaining());
@@ -999,8 +999,8 @@ class Line extends OpMode {
     @Override
     public void init_loop() {
         telemetryM.debug("This will activate all the PIDF(s)");
-        telemetryM.debug("The robot will go forward and backward continuously along the path while correcting.");
-        telemetryM.debug("You can adjust the PIDF values to tune the robot's drive PIDF(s).");
+        telemetryM.debug("Push dpad left/right to drive forward/backward by 12 inches.");
+        telemetryM.debug("Push dpad up/down to adjust the test distance by 1 inch.");
         telemetryM.update(telemetry);
         follower.update();
         drawOnlyCurrent();
@@ -1052,8 +1052,8 @@ class Line extends OpMode {
         if (gamepad1.dpadUpWasPressed()) impulseDistance+=1;
         if (gamepad1.dpadDownWasPressed() && impulseDistance-1 > 0) impulseDistance-=1;
 
-        telemetryM.addLine("Push dpad left/right to test all PIDF(s).");
-        telemetryM.addLine("Push dpad up/down to adjust test distance by 1 inches: "+impulseDistance+" inches");
+        telemetryM.addLine("Push dpad left/right to test all PIDFs by driving "+impulseDistance+" inches.");
+        telemetryM.debug("Push dpad up/down to adjust the test distance by 1 inch.");
         telemetryM.update(telemetry);
     }
 }
