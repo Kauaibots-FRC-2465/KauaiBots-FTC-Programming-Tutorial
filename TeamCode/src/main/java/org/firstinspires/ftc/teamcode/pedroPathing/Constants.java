@@ -32,8 +32,8 @@ public class Constants {
             .leftFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
             .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)
             .leftRearMotorDirection(DcMotorSimple.Direction.REVERSE)
-            .xVelocity(60d) // Added per https://pedropathing.com/docs/pathing/tuning/automatic "Forward Velocity Tuner"
-            .yVelocity(46d);  // Added per https://pedropathing.com/docs/pathing/tuning/automatic "Lateral Velocity Tuner"
+            .xVelocity(60.0d) // Added per https://pedropathing.com/docs/pathing/tuning/automatic "Forward Velocity Tuner"
+            .yVelocity(46.0d);  // Added per https://pedropathing.com/docs/pathing/tuning/automatic "Lateral Velocity Tuner"
 
     public static PinpointConstants localizerConstants = new PinpointConstants()
             .forwardPodY(130.0d) // The forward/backward (center of left rail) pod is 130mm left of center
