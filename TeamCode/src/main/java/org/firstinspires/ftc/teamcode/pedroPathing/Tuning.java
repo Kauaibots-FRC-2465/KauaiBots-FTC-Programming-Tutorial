@@ -921,7 +921,7 @@ class DriveTuner extends OpMode {
         follower.activateDrive();
         testPath = new Path(new BezierLine(new Pose(72,72), new Pose(72+.001,72)));
         testPath.setConstantHeadingInterpolation(0);
-        testPath.setTValueConstraint(2);
+        testPath.setTValueConstraint(1);
         testPath.setVelocityConstraint(0);
         testPath.setTranslationalConstraint(0);
         testPath.setHeadingConstraint(0);
@@ -943,7 +943,7 @@ class DriveTuner extends OpMode {
             follower.setPose(new Pose(72, 72).withHeading(0));
             testPath = new Path(new BezierLine(new Pose(72,72), new Pose(72+impulseDistance,72)));
             testPath.setConstantHeadingInterpolation(0);
-            testPath.setTValueConstraint(2);
+            testPath.setTValueConstraint(1);
             testPath.setVelocityConstraint(0);
             testPath.setTranslationalConstraint(0);
             testPath.setHeadingConstraint(0);
@@ -955,7 +955,7 @@ class DriveTuner extends OpMode {
             follower.setPose(new Pose(72, 72).withHeading(0));
             testPath = new Path(new BezierLine(new Pose(72,72), new Pose(72-impulseDistance,72)));
             testPath.setConstantHeadingInterpolation(0);
-            testPath.setTValueConstraint(2);
+            testPath.setTValueConstraint(1);
             testPath.setVelocityConstraint(0);
             testPath.setTranslationalConstraint(0);
             testPath.setHeadingConstraint(0);
@@ -1011,7 +1011,7 @@ class Line extends OpMode {
         follower.activateAllPIDFs();
         testPath = new Path(new BezierLine(new Pose(72,72), new Pose(72+.001,72)));
         testPath.setConstantHeadingInterpolation(0);
-        testPath.setTValueConstraint(2);
+        testPath.setTValueConstraint(1);
         testPath.setVelocityConstraint(0);
         testPath.setTranslationalConstraint(0);
         testPath.setHeadingConstraint(0);
@@ -1030,7 +1030,7 @@ class Line extends OpMode {
             follower.setPose(new Pose(72, 72).withHeading(0));
             testPath = new Path(new BezierLine(new Pose(72,72), new Pose(72+impulseDistance,72)));
             testPath.setConstantHeadingInterpolation(0);
-            testPath.setTValueConstraint(2);
+            testPath.setTValueConstraint(1);
             testPath.setVelocityConstraint(0);
             testPath.setTranslationalConstraint(0);
             testPath.setHeadingConstraint(0);
@@ -1042,7 +1042,7 @@ class Line extends OpMode {
             follower.setPose(new Pose(72, 72).withHeading(0));
             testPath = new Path(new BezierLine(new Pose(72,72), new Pose(72-impulseDistance,72)));
             testPath.setConstantHeadingInterpolation(0);
-            testPath.setTValueConstraint(2);
+            testPath.setTValueConstraint(1);
             testPath.setVelocityConstraint(0);
             testPath.setTranslationalConstraint(0);
             testPath.setHeadingConstraint(0);
@@ -1101,7 +1101,18 @@ class CentripetalTuner extends OpMode {
     public void start() {
         follower.activateAllPIDFs();
         forwards = new Path(new BezierCurve(new Pose(72,72), new Pose(Math.abs(DISTANCE) + 72,72), new Pose(Math.abs(DISTANCE) + 72,DISTANCE + 72)));
+        forwards.setTValueConstraint(1);
+        forwards.setVelocityConstraint(0);
+        forwards.setTranslationalConstraint(0);
+        forwards.setHeadingConstraint(0);
+        forwards.setTimeoutConstraint(2000);
+
         backwards = new Path(new BezierCurve(new Pose(Math.abs(DISTANCE) + 72,DISTANCE + 72), new Pose(Math.abs(DISTANCE) + 72,72), new Pose(72,72)));
+        backwards.setTValueConstraint(1);
+        backwards.setVelocityConstraint(0);
+        backwards.setTranslationalConstraint(0);
+        backwards.setHeadingConstraint(0);
+        backwards.setTimeoutConstraint(2000);
 
         backwards.setTangentHeadingInterpolation();
         backwards.reverseHeadingInterpolation();
