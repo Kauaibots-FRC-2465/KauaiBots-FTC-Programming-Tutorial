@@ -17,7 +17,7 @@ public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
             .mass(9.65) // Added per https://pedropathing.com/docs/pathing/tuning/setup "Setting your robot's mass"
             .forwardZeroPowerAcceleration(-29.0d) // Added per https://pedropathing.com/docs/pathing/tuning/automatic "Forward Zero Power Acceleration"
-            .lateralZeroPowerAcceleration(-50.0d)  // Added per https://pedropathing.com/docs/pathing/tuning/automatic "Lateral Zero Power Acceleration"
+            .lateralZeroPowerAcceleration(-60.0d)  // Added per https://pedropathing.com/docs/pathing/tuning/automatic "Lateral Zero Power Acceleration"
             .useSecondaryTranslationalPIDF(true) // Added per https://pedropathing.com/docs/pathing/tuning/pids *Dual PID System*
             /*far   */.translationalPIDFCoefficients(new PIDFCoefficients(0.05d, 0.0d, 0.006d, 0.11d))  // Added per https://pedropathing.com/docs/pathing/tuning/pids/translational *Update Tuned values Into Your Code*
             /*near  */.secondaryTranslationalPIDFCoefficients(new PIDFCoefficients(0d, 0.0d, 0d, 0d))  // Added per https://pedropathing.com/docs/pathing/tuning/pids/translational *Update Tuned values Into Your Code*
@@ -25,8 +25,7 @@ public class Constants {
             .useSecondaryHeadingPIDF(true) // Added per https://pedropathing.com/docs/pathing/tuning/pids *Dual PID System*
             /*far   */.headingPIDFCoefficients(new PIDFCoefficients(0.9d, 0.0d, 0.08d, 0.08d)) // Added per https://pedropathing.com/docs/pathing/tuning/pids/heading *Update Tuned values Into Your Code*
             /*near  */.secondaryHeadingPIDFCoefficients(new PIDFCoefficients(0d, 0.0d, 0.0d, 0.0d))  // Added per https://pedropathing.com/docs/pathing/tuning/pids/heading *Update Tuned values Into Your Code*
-            /*switch*/.headingPIDFSwitch(.003) // Left out of the documentation, add it ourselves.
-            .useSecondaryDrivePIDF(true); // Added per https://pedropathing.com/docs/pathing/tuning/pids *Dual PID System*
+            /*switch*/.headingPIDFSwitch(.003); // Left out of the documentation, add it ourselves.
 
     public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);
 
@@ -40,8 +39,8 @@ public class Constants {
             .leftFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
             .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)
             .leftRearMotorDirection(DcMotorSimple.Direction.REVERSE)
-            .xVelocity(64.3d) // Added per https://pedropathing.com/docs/pathing/tuning/automatic "Forward Velocity Tuner"
-            .yVelocity(52.3d);  // Added per https://pedropathing.com/docs/pathing/tuning/automatic "Lateral Velocity Tuner"
+            .xVelocity(60.0d) // Added per https://pedropathing.com/docs/pathing/tuning/automatic "Forward Velocity Tuner"
+            .yVelocity(46.0d);  // Added per https://pedropathing.com/docs/pathing/tuning/automatic "Lateral Velocity Tuner"
 
     public static PinpointConstants localizerConstants = new PinpointConstants()
             .forwardPodY(130.0d) // The forward/backward (center of left rail) pod is 130mm left of center
