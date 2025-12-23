@@ -15,7 +15,6 @@ import com.bylazar.field.PanelsField;
 import com.bylazar.field.Style;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
-import com.pedropathing.ErrorCalculator;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.*;
 import com.pedropathing.math.*;
@@ -816,7 +815,7 @@ class TranslationalTuner extends OpMode {
  * @version 1.0, 3/12/2024
  */
 class HeadingTuner extends OpMode {
-    public static double impulseRotation = Math.toRadians(45);
+    public static int impulseDegrees = 45;
 
     private Path testPath;
 
@@ -865,19 +864,19 @@ class HeadingTuner extends OpMode {
 
         if (gamepad1.dpadRightWasPressed())
         {
-            follower.setPose(new Pose(72, 72).withHeading(impulseRotation));
+            follower.setPose(new Pose(72, 72).withHeading(Math.toRadians(impulseDegrees)));
             follower.followPath(testPath);
         }
         if (gamepad1.dpadLeftWasPressed())
         {
-            follower.setPose(new Pose(72, 72).withHeading(-impulseRotation));
+            follower.setPose(new Pose(72, 72).withHeading(-Math.toRadians(impulseDegrees)));
             follower.followPath(testPath);
         }
-        if (gamepad1.dpadUpWasPressed()) impulseRotation+=Math.toRadians(1);
-        if (gamepad1.dpadDownWasPressed() && (impulseRotation-Math.toRadians(1))>0) impulseRotation-=Math.toRadians(1);
+        if (gamepad1.dpadUpWasPressed()) impulseDegrees += 1;
+        if (gamepad1.dpadDownWasPressed() && (impulseDegrees -1 >0)) impulseDegrees -= 1;
 
         telemetryM.debug("Push dpad left/right to test the Rotational PIDF(s).");
-        telemetryM.debug("Push dpad up/down to adjust test rotation by 1 degrees: "+Math.toDegrees(impulseRotation)+" degrees");
+        telemetryM.debug("Push dpad up/down to adjust test rotation by 1 degrees: "+impulseDegrees+" degrees");
         telemetryM.addData("Zero Line", 0);
         telemetryM.addData("Error", Math.toDegrees(follower.errorCalculator.getHeadingError()));
         telemetryM.update(telemetry);
@@ -894,7 +893,7 @@ class HeadingTuner extends OpMode {
  * @version 1.0, 3/12/2024
  */
 class DriveTuner extends OpMode {
-    public static double impulseDistance = 12;
+    public int impulseDistance = 12;
     private Path testPath;
 
     @Override
@@ -964,12 +963,14 @@ class DriveTuner extends OpMode {
             follower.followPath(testPath);
         }
         if (gamepad1.dpadUpWasPressed()) impulseDistance+=1;
-        if (gamepad1.dpadDownWasPressed() && impulseDistance > 0) impulseDistance-=1;
+        if (gamepad1.dpadDownWasPressed() && impulseDistance-1 > 0) impulseDistance-=1;
 
+        telemetryM.addLine("Push dpad left/right to test the Drive PIDF(s).");
+        telemetryM.addLine("Push dpad up/down to adjust test distance by 1 inches: "+impulseDistance+" inches");
         telemetryM.addData("Zero Line", 0);
         telemetryM.addData("Velocity Error (inches/sec)", follower.errorCalculator.getDriveErrors()[1]);
         telemetryM.addData("Position Error (inches): ", follower.getCurrentPath().getDistanceRemaining());
-        telemetryM.addLine("Drive power" + follower.getDriveVector().getMagnitude());
+        telemetryM.addData("Drive power", follower.getDriveVector().getMagnitude());
         telemetryM.update(telemetry);
     }
 }
@@ -985,11 +986,9 @@ class DriveTuner extends OpMode {
  * @version 1.0, 3/12/2024
  */
 class Line extends OpMode {
-    public static double DISTANCE = 40;
-    private boolean forward = true;
+    private int impulseDistance = 12;
 
-    private Path forwards;
-    private Path backwards;
+    private Path testPath;
 
     @Override
     public void init() {
@@ -1010,11 +1009,14 @@ class Line extends OpMode {
     @Override
     public void start() {
         follower.activateAllPIDFs();
-        forwards = new Path(new BezierLine(new Pose(72,72), new Pose(DISTANCE + 72,72)));
-        forwards.setConstantHeadingInterpolation(0);
-        backwards = new Path(new BezierLine(new Pose(DISTANCE + 72,72), new Pose(72,72)));
-        backwards.setConstantHeadingInterpolation(0);
-        follower.followPath(forwards);
+        testPath = new Path(new BezierLine(new Pose(72,72), new Pose(72+.001,72)));
+        testPath.setConstantHeadingInterpolation(0);
+        testPath.setTValueConstraint(2);
+        testPath.setVelocityConstraint(0);
+        testPath.setTranslationalConstraint(0);
+        testPath.setHeadingConstraint(0);
+        testPath.setTimeoutConstraint(100000);
+        follower.followPath(testPath);
     }
 
     /** This runs the OpMode, updating the Follower as well as printing out the debug statements to the Telemetry */
@@ -1023,17 +1025,35 @@ class Line extends OpMode {
         follower.update();
         draw();
 
-        if (!follower.isBusy()) {
-            if (forward) {
-                forward = false;
-                follower.followPath(backwards);
-            } else {
-                forward = true;
-                follower.followPath(forwards);
-            }
+        if (gamepad1.dpadRightWasPressed())
+        {
+            follower.setPose(new Pose(72, 72).withHeading(0));
+            testPath = new Path(new BezierLine(new Pose(72,72), new Pose(72+impulseDistance,72)));
+            testPath.setConstantHeadingInterpolation(0);
+            testPath.setTValueConstraint(2);
+            testPath.setVelocityConstraint(0);
+            testPath.setTranslationalConstraint(0);
+            testPath.setHeadingConstraint(0);
+            testPath.setTimeoutConstraint(100000);
+            follower.followPath(testPath);
         }
+        if (gamepad1.dpadLeftWasPressed())
+        {
+            follower.setPose(new Pose(72, 72).withHeading(0));
+            testPath = new Path(new BezierLine(new Pose(72,72), new Pose(72-impulseDistance,72)));
+            testPath.setConstantHeadingInterpolation(0);
+            testPath.setTValueConstraint(2);
+            testPath.setVelocityConstraint(0);
+            testPath.setTranslationalConstraint(0);
+            testPath.setHeadingConstraint(0);
+            testPath.setTimeoutConstraint(100000);
+            follower.followPath(testPath);
+        }
+        if (gamepad1.dpadUpWasPressed()) impulseDistance+=1;
+        if (gamepad1.dpadDownWasPressed() && impulseDistance-1 > 0) impulseDistance-=1;
 
-        telemetryM.debug("Driving Forward?: " + forward);
+        telemetryM.addLine("Push dpad left/right to test all PIDF(s).");
+        telemetryM.addLine("Push dpad up/down to adjust test distance by 1 inches: "+impulseDistance+" inches");
         telemetryM.update(telemetry);
     }
 }

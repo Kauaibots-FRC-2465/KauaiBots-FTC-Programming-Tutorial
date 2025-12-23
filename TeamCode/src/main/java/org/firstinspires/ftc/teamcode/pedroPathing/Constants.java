@@ -27,7 +27,7 @@ public class Constants {
             /*far   */.headingPIDFCoefficients(new PIDFCoefficients(0.9d, 0.0d, 0.08d, 0.08d)) // Added per https://pedropathing.com/docs/pathing/tuning/pids/heading *Update Tuned values Into Your Code*
             /*near  */.secondaryHeadingPIDFCoefficients(new PIDFCoefficients(0d, 0.0d, 0.0d, 0.0d))  // Added per https://pedropathing.com/docs/pathing/tuning/pids/heading *Update Tuned values Into Your Code*
             /*switch*/.headingPIDFSwitch(.003) // Left out of the documentation, add it ourselves.
-            .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.014d, 0.0d, 0.0d, 0.6d, 0.0d)); // Added per https://pedropathing.com/docs/pathing/tuning/pids/drive *Update Tuned values Into Your Code*
+            .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.016d, 0.0d, 0.0d, 0.6d, 0.0d)); // Added per https://pedropathing.com/docs/pathing/tuning/pids/drive *Update Tuned values Into Your Code*
 
     public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);
 
