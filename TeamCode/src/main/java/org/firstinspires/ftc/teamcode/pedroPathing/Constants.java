@@ -24,13 +24,10 @@ public class Constants {
             /*near  */.secondaryTranslationalPIDFCoefficients(new PIDFCoefficients(0d, 0.0d, 0d, 0d))  // Added per https://pedropathing.com/docs/pathing/tuning/pids/translational *Update Tuned values Into Your Code*
             /*switch*/.translationalPIDFSwitch(0.10d) // Left out of the documentation, add it ourselves.
             .useSecondaryHeadingPIDF(true) // Added per https://pedropathing.com/docs/pathing/tuning/pids *Dual PID System*
-            /*far   */.headingPIDFCoefficients(new PIDFCoefficients(2.0d, 0.0d, 0.0d, 0.0d)) // Added per https://pedropathing.com/docs/pathing/tuning/pids/heading *Update Tuned values Into Your Code*
-            /*near  */.secondaryHeadingPIDFCoefficients(new PIDFCoefficients(1.0d, 0.0d, 0.06d, 0.07d))  // Added per https://pedropathing.com/docs/pathing/tuning/pids/heading *Update Tuned values Into Your Code*
-            /*switch*/.headingPIDFSwitch(40.0d*(Math.PI/180.0d)) // Left out of the documentation, add it ourselves.
-            .useSecondaryDrivePIDF(true) // Added per https://pedropathing.com/docs/pathing/tuning/pids *Dual PID System*
-            /* far*/.drivePIDFCoefficients(new FilteredPIDFCoefficients(2d, 0.0d, 0d, 0.6d, 0.0d)) // Added per https://pedropathing.com/docs/pathing/tuning/pids/drive *Update Tuned values Into Your Code*
-            /*near*/.secondaryDrivePIDFCoefficients(new FilteredPIDFCoefficients(0.006d, 0.0d, .000005d, 0.6d, 0.03d)) // Added per https://pedropathing.com/docs/pathing/tuning/pids/drive *Update Tuned values Into Your Code*
-            .drivePIDFSwitch(30); // Left out of the documentation, add it ourselves.
+            /*far   */.headingPIDFCoefficients(new PIDFCoefficients(0.9d, 0.0d, 0.08d, 0.08d)) // Added per https://pedropathing.com/docs/pathing/tuning/pids/heading *Update Tuned values Into Your Code*
+            /*near  */.secondaryHeadingPIDFCoefficients(new PIDFCoefficients(0d, 0.0d, 0.0d, 0.0d))  // Added per https://pedropathing.com/docs/pathing/tuning/pids/heading *Update Tuned values Into Your Code*
+            /*switch*/.headingPIDFSwitch(.003) // Left out of the documentation, add it ourselves.
+            .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.014d, 0.0d, 0.0d, 0.6d, 0.0d)); // Added per https://pedropathing.com/docs/pathing/tuning/pids/drive *Update Tuned values Into Your Code*
 
     public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);
 
