@@ -58,7 +58,7 @@ public class PedroPathingSubsystem extends SubsystemBase {
         return new InstantCommand( ()-> this.fieldForwardRadians=fieldForwardRadians );
     }
 
-    /** Create command to set the field-oriented "forward" direction to the robots heading, taken at the time the command is scheduled
+    /** Create command to set the field-oriented "forward" direction to the robot's heading, taken at the time the command is scheduled
      * @return An {@link InstantCommand}
      */
     public Command cmdSetFieldForwardDirection() {
