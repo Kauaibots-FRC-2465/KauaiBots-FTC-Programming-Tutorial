@@ -74,7 +74,7 @@ public class PedroPathingSubsystem extends SubsystemBase {
      * @see #cmdSetFieldForwardDirection(float)
      * @see #cmdSetFieldForwardDirection()
      */
-    public Command cmdDriveFieldCentric(Supplier<Float> forward, Supplier<Float> strafe,
+    public Command cmdDriveFieldOriented(Supplier<Float> forward, Supplier<Float> strafe,
                                         Supplier<Float> turn, boolean withBraking) {
         return new RunCommand(
                 () -> this.subDriveRobot(forward.get(), strafe.get(), turn.get(), fieldForwardRadians, withBraking),
