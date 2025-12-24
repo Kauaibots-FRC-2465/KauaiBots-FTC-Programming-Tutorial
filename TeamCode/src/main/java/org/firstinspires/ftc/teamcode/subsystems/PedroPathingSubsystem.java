@@ -35,7 +35,7 @@ public class PedroPathingSubsystem extends SubsystemBase {
     }
 
     /**
-     * applies forward/strafe/rotate power with a heading offset to the robot's drive
+     * Applies forward/strafe/rotate power with a heading offset to the robot's drive
      *
      * @param forward          The power applied in the direction of {@code headingOffset} [Range: -1.0 to 1.0].
      * @param strafe           The power applied 90° CCW of {@code headingOffset} [Range: -1.0 to 1.0].
@@ -50,7 +50,7 @@ public class PedroPathingSubsystem extends SubsystemBase {
         follower.setTeleOpDrive(forward, strafe, turn, false, headingOffset);
     }
 
-    /** Create command to set the field-centric "forward" direction to a fixed value.
+    /** Create command to set the field-oriented "forward" direction to a fixed value.
      * @param fieldForwardRadians The new forward heading in radians.
      * @return An {@link InstantCommand}
      */
@@ -58,7 +58,7 @@ public class PedroPathingSubsystem extends SubsystemBase {
         return new InstantCommand( ()-> this.fieldForwardRadians=fieldForwardRadians );
     }
 
-    /** Create command to set the field-centric "forward" direction to the robots heading, taken at the time the command is scheduled
+    /** Create command to set the field-oriented "forward" direction to the robots heading, taken at the time the command is scheduled
      * @return An {@link InstantCommand}
      */
     public Command cmdSetFieldForwardDirection() {
