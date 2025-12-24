@@ -35,7 +35,7 @@ public class PedroPathingSubsystem extends SubsystemBase {
     }
 
     /**
-     * applies forward/strafe/rotate power with a rotation offset to the robot's drive
+     * applies forward/strafe/rotate power with a heading offset to the robot's drive
      *
      * @param forward          The power applied in the direction of {@code headingOffset} [Range: -1.0 to 1.0].
      * @param strafe           The power applied 90° CCW of {@code headingOffset} [Range: -1.0 to 1.0].
