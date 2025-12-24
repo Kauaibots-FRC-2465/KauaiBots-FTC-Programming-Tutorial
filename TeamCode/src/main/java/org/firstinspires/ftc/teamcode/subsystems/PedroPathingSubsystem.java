@@ -35,11 +35,12 @@ public class PedroPathingSubsystem extends SubsystemBase {
     }
 
     /**
-     * applies foward/strafe/rotate power with a rotation offset to the robot's drive
+     * applies forward/strafe/rotate power with a rotation offset to the robot's drive
      *
-     * @param forward          The power applied in the {@code forwardDirection} [Range: -1.0 to 1.0].
-     * @param strafe           The power applied 90° CCW from the {@code forwardDirection} [Range: -1.0 to 1.0].
-     * @param headingOffset    The rotational power (CCW is positive) [Range: -1.0 to 1.0].
+     * @param forward          The power applied in the direction of {@code headingOffset} [Range: -1.0 to 1.0].
+     * @param strafe           The power applied 90° CCW of {@code headingOffset} [Range: -1.0 to 1.0].
+     * @param turn             The power applied to rotate the robot CW/CCW [Range: -1.0 to 1.0].
+     * @param headingOffset    The direction, in radians, that defines "forward"
      * @param withBraking      Whether to enable ZeroPowerBehavior.BRAKE (true) or FLOAT (false).
      */
     private void subDriveRobot(float forward, float strafe, float turn, float headingOffset, boolean withBraking) {
@@ -69,9 +70,9 @@ public class PedroPathingSubsystem extends SubsystemBase {
      * @param strafe      Supplier for the right/left strafing power [-1.0, 1.0].
      * @param turn        Supplier for the cw/ccw rotational power [-1.0, 1.0].
      * @param withBraking If true, the robot will use active braking when inputs are neutral.
-     * @return An interruptable {@link RunCommand}
-     * * @see #setFieldForwardDriection(float)
-     * * @see #setFieldForwardDriection()
+     * @return An interruptible {@link RunCommand}
+     * @see #cmdSetFieldForwardDirection(float)
+     * @see #cmdSetFieldForwardDirection()
      */
     public Command cmdDriveFieldCentric(Supplier<Float> forward, Supplier<Float> strafe,
                                         Supplier<Float> turn, boolean withBraking) {
