@@ -16,12 +16,12 @@ import java.util.function.Supplier;
 
 public class PedroPathingSubsystem extends SubsystemBase {
     private final Follower follower;
+    private float fieldForwardRadians = 0;  // The field heading considered to be "forward"
+    private boolean teleopActive = false, teleopBraking = true; // Did we already send startTeleopDrive? Are we in braking mode?
+
     public PedroPathingSubsystem(final HardwareMap hardwareMap) {
         follower = Constants.createFollower(hardwareMap);
     }
-
-    private float fieldForwardRadians=0;  // The field heading considered to be "forward"
-    private boolean teleopActive = false, teleopBraking = true; // Did we already send startTeleopDrive? Are we in braking mode?
 
     @Override
     public void periodic() {
@@ -65,7 +65,7 @@ public class PedroPathingSubsystem extends SubsystemBase {
         return new InstantCommand( ()-> this.fieldForwardRadians=(float)follower.getHeading());
     }
 
-    /** Create command to initiate field centric driving.
+    /** Create command to initiate field-oriented driving.
      * @param forward     Supplier for the backward/forward driving power [-1.0, 1.0].
      * @param strafe      Supplier for the right/left strafing power [-1.0, 1.0].
      * @param turn        Supplier for the cw/ccw rotational power [-1.0, 1.0].
@@ -74,7 +74,7 @@ public class PedroPathingSubsystem extends SubsystemBase {
      * @see #cmdSetFieldForwardDirection(float)
      * @see #cmdSetFieldForwardDirection()
      */
-    public Command cmdDriveFieldOriented(Supplier<Float> forward, Supplier<Float> strafe,
+    public Command cmdGoFieldOriented(Supplier<Float> forward, Supplier<Float> strafe,
                                         Supplier<Float> turn, boolean withBraking) {
         return new RunCommand(
                 () -> this.subDriveRobot(forward.get(), strafe.get(), turn.get(), fieldForwardRadians, withBraking),
