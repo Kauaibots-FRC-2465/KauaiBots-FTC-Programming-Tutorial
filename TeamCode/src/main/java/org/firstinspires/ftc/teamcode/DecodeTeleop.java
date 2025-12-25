@@ -12,11 +12,11 @@ import org.firstinspires.ftc.teamcode.subsystems.PedroPathingSubsystem;
 
 import java.util.function.Supplier;
 
-@TeleOp(name = "2025 Decode Teleop", group = "20311")
+@TeleOp(name = "2025 Decode TeleOp", group = "20311")
 public class DecodeTeleop extends CommandOpMode {
-    PedroPathingSubsystem pps;
-        private GamepadEx driverGamepad;
-        private GamepadButton reorientButton, driverCentricButton;
+    private PedroPathingSubsystem pps;
+    private GamepadEx driverGamepad;
+    private GamepadButton reorientButton, driverCentricButton;
 
     @Override
     public void initialize() {
@@ -24,7 +24,6 @@ public class DecodeTeleop extends CommandOpMode {
         driverGamepad = new GamepadEx(gamepad1);
         reorientButton = new GamepadButton(driverGamepad, GamepadKeys.Button.Y);
         driverCentricButton = new GamepadButton(driverGamepad, GamepadKeys.Button.B);
-        pps.cmdSetFieldForwardDirection(0).schedule();
         Supplier<Float> fwdSupplier = () -> -gamepad1.left_stick_y;
         Supplier<Float> strafeSupplier = () -> -gamepad1.left_stick_x;
         Supplier<Float> turnSupplier = () -> -gamepad1.right_stick_x;
@@ -35,8 +34,10 @@ public class DecodeTeleop extends CommandOpMode {
         Command driverPlaysRed = pps.cmdSetDriverPose(new Pose(  0-12, 24));
         Command driverPlaysBlue = pps.cmdSetDriverPose(new Pose(144+12, 24));
 
-        driverPlaysRed.schedule();
+        pps.cmdSetFieldForwardDirection(0).schedule();
         pps.setDefaultCommand(goFieldOriented);
+        driverPlaysRed.schedule();
+
         reorientButton.whenPressed(reorient);
         driverCentricButton.whenPressed(goDriverCentric);
     }
