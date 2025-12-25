@@ -15,7 +15,7 @@ import java.util.function.Supplier;
 public class DecodeTeleop extends CommandOpMode {
     private PedroPathingSubsystem pps;
     private GamepadEx driverGamepad;
-    private GamepadButton reorientButton, driverCentricButton;
+    private GamepadButton reorientButton;
 
     @Override
     public void initialize() {
@@ -26,7 +26,7 @@ public class DecodeTeleop extends CommandOpMode {
         Supplier<Float> strafeSupplier = () -> -gamepad1.left_stick_x;
         Supplier<Float> turnSupplier = () -> -gamepad1.right_stick_x;
         Command goFieldOriented = pps.cmdGoFieldOriented(fwdSupplier, strafeSupplier, turnSupplier, true);
-        Command reorient=pps.cmdSetFieldForwardDirection();
+        Command reorient = pps.cmdSetFieldForwardDirection();
 
         pps.cmdSetFieldForwardDirection(0).schedule();
         pps.setDefaultCommand(goFieldOriented);
