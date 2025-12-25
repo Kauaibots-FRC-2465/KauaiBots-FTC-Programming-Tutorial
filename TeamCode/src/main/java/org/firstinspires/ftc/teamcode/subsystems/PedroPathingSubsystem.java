@@ -19,7 +19,7 @@ public class PedroPathingSubsystem extends SubsystemBase {
     private final Follower follower;
     private float fieldForwardRadians = 0;  // The field heading considered to be "forward"
     private boolean teleopActive = false, teleopBraking = true; // Did we already send startTeleopDrive? Are we in braking mode?
-    private Pose driverPose = new Pose (0, 0);
+    private Pose driverPose = new Pose(0, 0);
 
     public PedroPathingSubsystem(final HardwareMap hardwareMap) {
         follower = Constants.createFollower(hardwareMap);
