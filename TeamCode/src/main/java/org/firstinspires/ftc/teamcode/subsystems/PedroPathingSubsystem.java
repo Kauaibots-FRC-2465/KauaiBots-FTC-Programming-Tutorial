@@ -96,7 +96,7 @@ public class PedroPathingSubsystem extends SubsystemBase {
         return new InstantCommand( ()-> this.driverPose=driverPose);
     }
 
-    /** Create command to initiate field centric driving.
+    /** Create command to initiate driver-centric driving.
      * @param forward     Supplier for the backward/forward driving power [-1.0, 1.0].
      * @param strafe      Supplier for the right/left strafing power [-1.0, 1.0].
      * @param turn        Supplier for the cw/ccw rotational power [-1.0, 1.0].

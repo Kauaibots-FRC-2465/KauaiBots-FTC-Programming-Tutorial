@@ -20,7 +20,7 @@ public class DecodeTeleop extends CommandOpMode {
 
     @Override
     public void initialize() {
-        pps = new PedroPathingSubsystem(hardwareMap, new Pose(72+24,72, 0));
+        pps = new PedroPathingSubsystem(hardwareMap, new Pose(0+17.2/2, 24, 0));
         driverGamepad = new GamepadEx(gamepad1);
         reorientButton = new GamepadButton(driverGamepad, GamepadKeys.Button.Y);
         driverCentricButton = new GamepadButton(driverGamepad, GamepadKeys.Button.B);
@@ -30,7 +30,7 @@ public class DecodeTeleop extends CommandOpMode {
         Command goFieldOriented = pps.cmdGoFieldOriented(fwdSupplier, strafeSupplier, turnSupplier, true);
         Command goDriverCentric = pps.cmdGoDriverCentric(fwdSupplier, strafeSupplier, turnSupplier, true);
         Command reorient=pps.cmdSetFieldForwardDirection()
-                .andThen(pps.cmdGoDriverCentric(fwdSupplier, strafeSupplier, turnSupplier, true));
+                .andThen(pps.cmdGoFieldOriented(fwdSupplier, strafeSupplier, turnSupplier, true));
         Command driverPlaysRed = pps.cmdSetDriverPose(new Pose(  0-12, 24));
         Command driverPlaysBlue = pps.cmdSetDriverPose(new Pose(144+12, 24));
 
