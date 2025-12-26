@@ -35,7 +35,7 @@ dependencies {
     implementation "org.solverslib:core:0.3.3" // core
 }
 
-repo sitories {
+repositories {
     maven {
         url "https://repo.dairy.foundation/releases"
     }
