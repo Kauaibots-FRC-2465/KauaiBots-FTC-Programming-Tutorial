@@ -7,6 +7,7 @@ import com.seattlesolvers.solverslib.command.InstantCommand;
 import com.seattlesolvers.solverslib.command.RunCommand;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 import com.pedropathing.follower.Follower;
+import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.Drawing;
@@ -18,9 +19,15 @@ public class PedroPathingSubsystem extends SubsystemBase {
     private final Follower follower;
     private float fieldForwardRadians = 0;  // The field heading considered to be "forward"
     private boolean teleopActive = false, teleopBraking = true; // Did we already send startTeleopDrive? Are we in braking mode?
+    private Pose driverPose = new Pose(0, 0);
 
     public PedroPathingSubsystem(final HardwareMap hardwareMap) {
         follower = Constants.createFollower(hardwareMap);
+    }
+
+    public PedroPathingSubsystem(final HardwareMap hardwareMap, Pose startingPose) {
+        follower = Constants.createFollower(hardwareMap);
+        follower.setStartingPose(startingPose);
     }
 
     @Override
@@ -78,6 +85,34 @@ public class PedroPathingSubsystem extends SubsystemBase {
                                         Supplier<Float> turn, boolean withBraking) {
         return new RunCommand(
                 () -> this.subDriveRobot(forward.get(), strafe.get(), turn.get(), fieldForwardRadians, withBraking),
+                this // Require this subsystem to run this command
+        );
+    }
+
+    /** Create command to set the location where the driver stands while driving the robot.
+     * @return An {@link InstantCommand}
+     */
+    public Command cmdSetDriverPose(Pose driverPose) {
+        return new InstantCommand( ()-> this.driverPose=driverPose);
+    }
+
+    /** Create command to initiate driver-centric driving.
+     * @param forward     Supplier for the backward/forward driving power [-1.0, 1.0].
+     * @param strafe      Supplier for the right/left strafing power [-1.0, 1.0].
+     * @param turn        Supplier for the cw/ccw rotational power [-1.0, 1.0].
+     * @param withBraking If true, the robot will use active braking when inputs are neutral.
+     * @return An interruptible {@link RunCommand}
+     */
+    public Command cmdGoDriverCentric(Supplier<Float> forward, Supplier<Float> strafe,
+                                      Supplier<Float> turn, boolean withBraking) {
+        return new RunCommand(
+                () -> {
+                    float driverForward = (float) Math.atan2(
+                            follower.getPose().getY()- driverPose.getY(),
+                            follower.getPose().getX()- driverPose.getX()
+                    );
+                    this.subDriveRobot(forward.get(), strafe.get(), turn.get(), driverForward, withBraking);
+                },
                 this // Require this subsystem to run this command
         );
     }
