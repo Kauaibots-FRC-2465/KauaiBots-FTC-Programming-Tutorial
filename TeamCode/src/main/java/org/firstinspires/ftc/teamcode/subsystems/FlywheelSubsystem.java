@@ -5,10 +5,14 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
+import com.seattlesolvers.solverslib.command.Command;
+import com.seattlesolvers.solverslib.command.FunctionalCommand;
+import com.seattlesolvers.solverslib.command.Subsystem;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 
 
 import org.apache.commons.math3.stat.StatUtils;
+import org.firstinspires.ftc.teamcode.OverrideCommand;
 
 import java.util.ArrayList;
 import java.util.function.DoubleSupplier;
@@ -26,7 +30,7 @@ public class FlywheelSubsystem extends SubsystemBase {
 
     // motor control
     private double[] voltageHistory = {12d, 12d, 12d, 12d, 12d, 12d, 12d, 12d};
-    private double batteryVoltage;
+    private double batteryVoltage = 12d;
     private final DoubleSupplier idle = () -> 0;
     private DoubleSupplier motorVoltageSupplier = idle; // Commands must provide their own supplier
     private double motorVoltage;
@@ -85,4 +89,13 @@ public class FlywheelSubsystem extends SubsystemBase {
     private double getCurrentRPM() {
         return encoderMotor.getVelocity() / countsPerFlywheelRotation * 60d;
     }
+
+    public Command cmdTuneKs() {
+        return new OverrideCommand(this) {
+            @Override
+            public void initialize() {
+            }
+        };
+    }
+
 }
