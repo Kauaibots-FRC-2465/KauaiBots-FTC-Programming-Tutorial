@@ -47,7 +47,7 @@ public class FlywheelSubsystem extends SubsystemBase {
             flywheelMotors.add(motor);
         }
         catch (Exception ignored) {
-            throw new IllegalArgumentException("Failed to get motor " + motorName +".  You may" +
+            throw new IllegalArgumentException("Failed to get motor " + motorName + ".  You may" +
                     " need to power cycle the Robot.    (Did you verify the name you gave matches" +
                     " what you set in the robot configuration?)");
         }
