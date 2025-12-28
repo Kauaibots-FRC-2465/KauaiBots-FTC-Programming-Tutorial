@@ -11,7 +11,6 @@ import com.seattlesolvers.solverslib.command.SubsystemBase;
 import org.apache.commons.math3.stat.StatUtils;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.function.DoubleSupplier;
 
 public class FlywheelSubsystem extends SubsystemBase {
@@ -31,7 +30,7 @@ public class FlywheelSubsystem extends SubsystemBase {
     private final DoubleSupplier idle = () -> 0;
     private DoubleSupplier motorVoltageSupplier = idle; // Commands must provide their own supplier
     private double motorVoltage;
-    private double kS=0;
+    private double kS = 0;
 
     // Behavior Monitoring
     private int jamCounter = 0;
@@ -80,7 +79,7 @@ public class FlywheelSubsystem extends SubsystemBase {
         }
         boolean possibleJam = (motorVoltage > kS * 2d && getCurrentRPM() < JAMMED_WHEN_RPM_BELOW);
         jamCounter = possibleJam ? jamCounter+1 : 0;
-        isJammed = jamCounter > JAMMED_WHEN_COUNT_IS;
+        isJammed = jamCounter >= JAMMED_WHEN_COUNT_IS;
     }
 
     private double getCurrentRPM() {
