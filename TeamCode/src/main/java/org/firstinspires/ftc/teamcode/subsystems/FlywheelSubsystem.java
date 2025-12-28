@@ -28,15 +28,16 @@ public class FlywheelSubsystem extends SubsystemBase {
     // motor control
     private double[] voltageHistory = {12d, 12d, 12d, 12d, 12d, 12d, 12d, 12d};
     private double batteryVoltage;
-    private DoubleSupplier motorVoltageSupplier;
+    private final DoubleSupplier idle = () -> 0;
+    private DoubleSupplier motorVoltageSupplier = idle; // Commands must provide their own supplier
     private double motorVoltage;
-    private double kS;
+    private double kS=0;
 
     // Behavior Monitoring
     private int jamCounter = 0;
+    private boolean isJammed = false;
     private final int JAMMED_WHEN_COUNT_IS = 100;
     private final double JAMMED_WHEN_RPM_BELOW = 60;
-    private boolean isJammed = false;
 
     public FlywheelSubsystem(HardwareMap hardwareMap,
                              VoltageSensor controlHubVSensor,
@@ -77,8 +78,8 @@ public class FlywheelSubsystem extends SubsystemBase {
         for (DcMotorEx flywheelMotor : flywheelMotors) {
             flywheelMotor.setPower(motorVoltage / batteryVoltage);
         }
-        boolean posibleJam = (motorVoltage > kS * 2d && getCurrentRPM() < JAMMED_WHEN_RPM_BELOW);
-        jamCounter = posibleJam ? jamCounter+1 : 0;
+        boolean possibleJam = (motorVoltage > kS * 2d && getCurrentRPM() < JAMMED_WHEN_RPM_BELOW);
+        jamCounter = possibleJam ? jamCounter+1 : 0;
         isJammed = jamCounter > JAMMED_WHEN_COUNT_IS;
     }
 
