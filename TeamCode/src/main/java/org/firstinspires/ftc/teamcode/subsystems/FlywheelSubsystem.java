@@ -81,4 +81,8 @@ public class FlywheelSubsystem extends SubsystemBase {
         jamCounter = posibleJam ? jamCounter+1 : 0;
         isJammed = jamCounter > JAMMED_WHEN_COUNT_IS;
     }
+
+    private double getCurrentRPM() {
+        return encoderMotor.getVelocity() / countsPerFlywheelRotation * 60d;
+    }
 }
