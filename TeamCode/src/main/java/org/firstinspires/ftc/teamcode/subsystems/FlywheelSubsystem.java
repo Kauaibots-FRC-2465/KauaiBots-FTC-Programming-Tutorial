@@ -25,19 +25,46 @@ import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
 public class FlywheelSubsystem extends SubsystemBase {
-    private TelemetryManager panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
+    // hardware references
     private HardwareMap hardwareMap;
-    private double flywheelDiameterInches;
+    private VoltageSensor controlHubVSensor;
+    private ArrayList<DcMotorEx> flywheelMotors = new ArrayList<>();
     private DcMotorEx encoderMotor = null;
+
+    // flywheel data
     private double countsPerFlywheelRotation;
-    private VoltageSensor controlHubVSensor = null;
+    private double flywheelDiameterInches;
+
+    // motor control
+    private double[] voltageHistory = {12d, 12d, 12d, 12d, 12d, 12d, 12d, 12d};
+    private double batteryVoltage = 12d;
+    private final DoubleSupplier idle = () -> 0;
+    private DoubleSupplier motorVoltageSupplier = idle; // Commands must provide their own supplier
+    private double motorVoltage;
     private final double kS = 0.48; // How many volt needed to break static friction
     private final double kV = 0.00252; // How many volts for each RPM
-    private double batteryVoltage = 12d;
-    private double[] voltageHistory = {12d, 12d, 12d, 12d};
-    private ArrayList<DcMotorEx> flywheelMotors = new ArrayList<>();
     private double pidP = kV*8; // An initial guess, you want to check with tuning
     private PIDController basicPID = new PIDController(pidP, 0, 0);
+
+    // Behavior Monitoring
+    private int jamCounter = 0;
+    private boolean isJammed = false;
+    private final int JAMMED_WHEN_COUNT_IS = 50;
+    private final double JAMMED_WHEN_RPM_BELOW = 60;
+    private boolean launchStarted;
+    private boolean isStable;
+    private boolean wasStable;
+    private boolean launchEnded;
+    private int stabilityCount;
+    private double lastVelocity;
+    private int launchVelocityRiseCount;
+    private final int STABLE_WHEN_AT_SETPOINT_COUNT = 5;
+    private final double SHOT_STARTS_WHEN_RPM_DROPS = 200;
+    private final int LAUNCH_COMPLETE_WHEN_VELOCITY_RISE_COUNT = 5;
+
+    // Telemetry
+    private TelemetryManager panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
+
     public FlywheelSubsystem(HardwareMap hardwareMap,
                              VoltageSensor controlHubVSensor,
                              double countsPerFlywheelRotation,
@@ -71,12 +98,6 @@ public class FlywheelSubsystem extends SubsystemBase {
         }
     }
 
-    private DoubleSupplier idle = () -> 0;
-    private DoubleSupplier voltageSupplier = idle;
-    private int jamCounter = 0;
-    private final int JAMMED_WHEN_COUNT_IS = 100;
-    private final double JAMMED_WHEN_RPM_BELOW = 60;
-
     @Override
     public void periodic() {
         if (flywheelMotors.isEmpty()) throw new IllegalStateException("ASSERTION FAILED: You" +
@@ -85,7 +106,7 @@ public class FlywheelSubsystem extends SubsystemBase {
             voltageHistory[index] = voltageHistory[index + 1];
         voltageHistory[voltageHistory.length - 1] = controlHubVSensor.getVoltage();
         batteryVoltage = Arrays.stream(voltageHistory).sum() / voltageHistory.length;
-        double voltage = voltageSupplier.getAsDouble();
+        double voltage = motorVoltageSupplier.getAsDouble();
         for (DcMotorEx flywheelMotor : flywheelMotors) {
             flywheelMotor.setPower(voltage / batteryVoltage);
         }
@@ -120,7 +141,7 @@ public class FlywheelSubsystem extends SubsystemBase {
             public void initialize() {
                 finished = false;
                 requestedVoltage = .15d*12d;
-                voltageSupplier = () -> requestedVoltage;
+                motorVoltageSupplier = () -> requestedVoltage;
                 velCount = 0;
                 velTotal = 0.0;
                 lastRPM = 0;
@@ -153,7 +174,7 @@ public class FlywheelSubsystem extends SubsystemBase {
 
             @Override
             public void end(boolean interrupted) {
-                voltageSupplier = idle;
+                motorVoltageSupplier = idle;
                 Log.i("FTC20311", "detected kS = " + regression.getIntercept());
                 Log.i("FTC20311", "detected kV = " + regression.getSlope());
             }
@@ -165,24 +186,12 @@ public class FlywheelSubsystem extends SubsystemBase {
         };
     }
 
-    private boolean launchStarted;
-    private boolean isStable;
-    private boolean wasStable;
-    private boolean launchEnded;
-    private boolean isJammed = false;
-    private int stabilityCount;
-    private double lastVelocity;
-    private int launchVelocityRiseCount;
-
-    private final int STABLE_WHEN_AT_SETPOINT_COUNT = 5;
-    private final double SHOT_STARTS_WHEN_RPM_DROPS = 200;
-    private final int LAUNCH_COMPLETE_WHEN_VELOCITY_RISE_COUNT = 5;
 
     public Command cmdSetRPM(DoubleSupplier rpm, BooleanSupplier isFinished) {
         return new FunctionalCommand(
                 () -> {
                     basicPID.setTolerance(60);
-                    voltageSupplier = () -> {
+                    motorVoltageSupplier = () -> {
                         basicPID.setSetPoint(rpm.getAsDouble());
                         double correction = basicPID.calculate(getCurrentRPM());
                         return correction + kS + kV * rpm.getAsDouble();
@@ -208,7 +217,7 @@ public class FlywheelSubsystem extends SubsystemBase {
                         lastVelocity = currentRPM;
                     }
                 },
-                (Boolean interrupted) -> voltageSupplier = idle,
+                (Boolean interrupted) -> motorVoltageSupplier = idle,
                 isFinished,
                 this);
     }
@@ -282,11 +291,11 @@ public class FlywheelSubsystem extends SubsystemBase {
             @Override
             public void initialize() {
                 elapsedTime.reset();
-                voltageSupplier = () -> (int) elapsedTime.seconds() % 2 == 0 ? -UNJAM_VOLTAGE : UNJAM_VOLTAGE;
+                motorVoltageSupplier = () -> (int) elapsedTime.seconds() % 2 == 0 ? -UNJAM_VOLTAGE : UNJAM_VOLTAGE;
             }
             @Override
             public void end(boolean interrupted) {
-                voltageSupplier = idle;
+                motorVoltageSupplier = idle;
             }
         };
     }
