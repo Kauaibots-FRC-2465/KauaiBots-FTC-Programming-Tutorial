@@ -35,7 +35,7 @@ public class FlywheelSubsystem extends SubsystemBase {
     // Behavior Monitoring
     private int jamCounter = 0;
     private boolean isJammed = false;
-    private final int JAMMED_WHEN_COUNT_IS = 100;
+    private final int JAMMED_WHEN_COUNT_IS = 50;
     private final double JAMMED_WHEN_RPM_BELOW = 60;
 
     public FlywheelSubsystem(HardwareMap hardwareMap,
