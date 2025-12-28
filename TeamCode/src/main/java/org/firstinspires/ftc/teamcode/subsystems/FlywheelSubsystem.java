@@ -44,10 +44,10 @@ public class FlywheelSubsystem extends SubsystemBase {
                              double flywheelDiameterInches) {
         this.hardwareMap = hardwareMap;
         this.controlHubVSensor = controlHubVSensor;
+        this.countsPerFlywheelRotation = countsPerFlywheelRotation;
         this.flywheelDiameterInches = flywheelDiameterInches;
         if (flywheelDiameterInches == 0) throw new IllegalArgumentException ("ASSERTION FAILED:"+
                 " flywheelDiameterInches cannot be 0.");
-        this.countsPerFlywheelRotation = countsPerFlywheelRotation;
         if (countsPerFlywheelRotation == 0) throw new IllegalArgumentException ("ASSERTION FAILED:"+
                 " countsPerFlywheelRotation cannot be 0.");
     }
