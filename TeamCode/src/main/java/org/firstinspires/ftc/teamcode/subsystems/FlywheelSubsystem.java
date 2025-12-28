@@ -18,7 +18,6 @@ import com.seattlesolvers.solverslib.controller.PIDController;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.apache.commons.math3.stat.regression.SimpleRegression;
-import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -39,14 +38,11 @@ public class FlywheelSubsystem extends SubsystemBase {
     private ArrayList<DcMotorEx> flywheelMotors = new ArrayList<>();
     private double pidP = kV*8; // An initial guess, you want to check with tuning
     private PIDController basicPID = new PIDController(pidP, 0, 0);
-    private Telemetry telemetry;
     public FlywheelSubsystem(HardwareMap hardwareMap,
-                             Telemetry telemetry,
                              VoltageSensor controlHubVSensor,
                              double countsPerFlywheelRotation,
                              double flywheelDiameterInches) {
         this.hardwareMap = hardwareMap;
-        this.telemetry = telemetry;
         this.controlHubVSensor = controlHubVSensor;
         this.flywheelDiameterInches = flywheelDiameterInches;
         if (flywheelDiameterInches == 0) throw new IllegalArgumentException ("ASSERTION FAILED:"+
@@ -221,8 +217,8 @@ public class FlywheelSubsystem extends SubsystemBase {
         return cmdSetRPM(() -> ips.getAsDouble() / Math.PI / flywheelDiameterInches * 60d, isFinished);
     }
 
-    public Command cmdTuneWithTelemetry(DoubleSupplier rpm) {
-        Log.i("FTC20311", "FTC Telemetry is located at http://192.168.43.1:8080/dash");
+    public Command cmdTuneWithTelemetry(DoubleSupplier rpm, BooleanSupplier isFinished) {
+        Log.i("FTC20311", "Panels is located at http://192.168.43.1:8001");
         return cmdSetRPM(rpm, () -> {
             panelsTelemetry.addData("flywheel/measured rpm", getCurrentRPM());
             panelsTelemetry.addData("flywheel/requested rpm", rpm.getAsDouble());
@@ -233,7 +229,7 @@ public class FlywheelSubsystem extends SubsystemBase {
             panelsTelemetry.addData("flywheel/launchEnded", launchEnded);
             panelsTelemetry.addData("flywheel/PID P gain", pidP);
             panelsTelemetry.update();
-            return false;
+            return isFinished.getAsBoolean();
         });
     }
 
@@ -295,7 +291,7 @@ public class FlywheelSubsystem extends SubsystemBase {
         };
     }
 
-    public boolean isJammed() {
+    public boolean getIsJammed() {
         return isJammed;
     }
 }

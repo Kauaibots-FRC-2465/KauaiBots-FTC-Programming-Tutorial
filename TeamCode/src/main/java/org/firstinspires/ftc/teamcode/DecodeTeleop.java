@@ -61,12 +61,12 @@ public class DecodeTeleop extends CommandOpMode {
         reorientButton.whenPressed(reorient).whenPressed(goFieldOriented);
         driverCentricButton.whenPressed(goDriverCentric);
 
-        fs = new FlywheelSubsystem(hardwareMap, telemetry, controlHubVSensor, 28, 3);
+        fs = new FlywheelSubsystem(hardwareMap, controlHubVSensor, 28, 3);
         fs.addFlywheelMotor("shooter1", false);
         fs.addFlywheelMotor("shooter2", false);
 
         testButton.whenPressed(fs.cmdTuneKs());
-        testButton2.whenPressed(fs.cmdTuneWithTelemetry(()->1500d));
+        testButton2.whileHeld(fs.cmdTuneWithTelemetry(()->1500d, ()->false));
         increaseP.whenPressed(fs.cmdIncreaseP(.001d));
         decreaseP.whenPressed(fs.cmdDecreaseP(.001d));
     }
