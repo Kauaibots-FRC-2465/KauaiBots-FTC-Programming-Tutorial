@@ -7,7 +7,12 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 
+
+import org.apache.commons.math3.stat.StatUtils;
+
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.function.DoubleSupplier;
 
 public class FlywheelSubsystem extends SubsystemBase {
     // hardware references
@@ -19,6 +24,19 @@ public class FlywheelSubsystem extends SubsystemBase {
     // flywheel data
     private double countsPerFlywheelRotation;
     private double flywheelDiameterInches;
+
+    // motor control
+    private double[] voltageHistory = {12d, 12d, 12d, 12d, 12d, 12d, 12d, 12d};
+    private double batteryVoltage;
+    private DoubleSupplier motorVoltageSupplier;
+    private double motorVoltage;
+    private double kS;
+
+    // Behavior Monitoring
+    private int jamCounter = 0;
+    private final int JAMMED_WHEN_COUNT_IS = 100;
+    private final double JAMMED_WHEN_RPM_BELOW = 60;
+    private boolean isJammed = false;
 
     public FlywheelSubsystem(HardwareMap hardwareMap,
                              VoltageSensor controlHubVSensor,
@@ -48,5 +66,19 @@ public class FlywheelSubsystem extends SubsystemBase {
                     " need to power cycle the Robot.    (Did you verify the name you gave matches" +
                     " what you set in the robot configuration?)");
         }
+    }
+
+    @Override
+    public void periodic() {
+        System.arraycopy(voltageHistory, 0, voltageHistory, 1, voltageHistory.length - 1);
+        voltageHistory[0] = controlHubVSensor.getVoltage();
+        batteryVoltage = StatUtils.mean(voltageHistory);
+        motorVoltage = motorVoltageSupplier.getAsDouble();
+        for (DcMotorEx flywheelMotor : flywheelMotors) {
+            flywheelMotor.setPower(motorVoltage / batteryVoltage);
+        }
+        boolean posibleJam = (motorVoltage > kS * 2d && getCurrentRPM() < JAMMED_WHEN_RPM_BELOW);
+        jamCounter = posibleJam ? jamCounter+1 : 0;
+        isJammed = jamCounter > JAMMED_WHEN_COUNT_IS;
     }
 }
