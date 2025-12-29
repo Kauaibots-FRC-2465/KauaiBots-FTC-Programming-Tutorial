@@ -66,7 +66,7 @@ public class DecodeTeleop extends CommandOpMode {
         fs.addFlywheelMotor("shooter1", DcMotorSimple.Direction.REVERSE);
         fs.addFlywheelMotor("shooter2", DcMotorSimple.Direction.REVERSE);
 
-        testButton.whenPressed(fs.cmdTuneKs());
+        testButton.whenPressed(fs.cmdTuneMotorConstants());
         testButton2.whileHeld(fs.cmdTuneWithTelemetry(()->1500d, ()->false));
         increaseP.whenPressed(fs.cmdIncreaseP(.001d));
         decreaseP.whenPressed(fs.cmdDecreaseP(.001d));

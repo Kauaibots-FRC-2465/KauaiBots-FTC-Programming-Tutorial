@@ -126,7 +126,7 @@ public class FlywheelSubsystem extends SubsystemBase {
         };
     }
 
-    public Command cmdTuneKs() {
+    public Command cmdTuneMotorConstants() {
         return new OverrideCommand(this) {
             private double requestedVoltage;
 
