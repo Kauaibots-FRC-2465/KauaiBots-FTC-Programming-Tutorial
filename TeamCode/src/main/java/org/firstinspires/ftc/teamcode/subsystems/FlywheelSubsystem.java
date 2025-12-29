@@ -27,7 +27,7 @@ public class FlywheelSubsystem extends SubsystemBase {
     private double[] voltageHistory = {12d, 12d, 12d, 12d, 12d, 12d, 12d, 12d};
     private double batteryVoltage = 12d;
     private final DoubleSupplier idle = () -> 0;
-    private DoubleSupplier motorVoltageSupplier; // Commands must provide their own supplier
+    private DoubleSupplier motorVoltageSupplier = idle; // Commands must provide their own supplier
     private double motorVoltage;
     private double kS = 0;
 
