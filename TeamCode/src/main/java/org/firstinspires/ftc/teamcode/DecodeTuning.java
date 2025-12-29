@@ -12,8 +12,8 @@ import org.firstinspires.ftc.teamcode.subsystems.FlywheelSubsystem;
 
 @TeleOp(name = "2025 Decode Tuning", group = "20311")
 public class DecodeTuning extends CommandOpMode {
-    private VoltageSensor controlHubVSensor = null;
     private FlywheelSubsystem fs;
+    private VoltageSensor controlHubVSensor = null;
     private GamepadEx driverGamepad;
     private GamepadButton
             tuneMotorConstantsButton,
@@ -37,7 +37,7 @@ public class DecodeTuning extends CommandOpMode {
         tuneMotorConstantsButton = new GamepadButton(driverGamepad, GamepadKeys.Button.A);
         idleButton = new GamepadButton(driverGamepad, GamepadKeys.Button.B);
         tunePidButton = new GamepadButton(driverGamepad, GamepadKeys.Button.X);
-        increasePButton = new GamepadButton(driverGamepad, GamepadKeys.Button.DPAD_UP;
+        increasePButton = new GamepadButton(driverGamepad, GamepadKeys.Button.DPAD_UP);
         decreasePButton = new GamepadButton(driverGamepad, GamepadKeys.Button.DPAD_DOWN);
         tuneMotorConstantsButton.whenPressed(fs.cmdTuneMotorConstants());
         idleButton.whenPressed(fs.cmdIdle());

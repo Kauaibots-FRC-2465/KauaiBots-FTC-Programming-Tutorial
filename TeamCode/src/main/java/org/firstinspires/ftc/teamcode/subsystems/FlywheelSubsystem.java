@@ -38,9 +38,9 @@ public class FlywheelSubsystem extends SubsystemBase {
     // motor control
     private double[] voltageHistory = {12d, 12d, 12d, 12d, 12d, 12d, 12d, 12d};
     private double batteryVoltage = 12d;
-    private double kS = 0;
-    private double kV = 0;
-    private double pidP = 0;
+    private double kS = 0.48;
+    private double kV = 0.00252;
+    private double pidP = kV*8;
     private PIDController basicPID = new PIDController(pidP, 0, 0);
     private double motorVoltage;
 
@@ -292,7 +292,7 @@ public class FlywheelSubsystem extends SubsystemBase {
         return isJammed;
     }
 
-    public Command cmdUnjam(double power, double cycletime) {
+    public Command cmdUnjam(double power, double secondsPerReversal) {
         return new OverrideCommand(this) {
             ElapsedTime elapsedTime = new ElapsedTime();
             double unjamVoltage;
@@ -300,9 +300,9 @@ public class FlywheelSubsystem extends SubsystemBase {
             @Override
             public void initialize() {
                 elapsedTime.reset();
-                unjamVoltage = power*12;
+                unjamVoltage = -power*12;
                 motorVoltageSupplier = () -> {
-                    if (elapsedTime.seconds() >= cycletime/2) {
+                    if (elapsedTime.seconds() >= secondsPerReversal) {
                         elapsedTime.reset();
                         unjamVoltage *= -1;
                     }
