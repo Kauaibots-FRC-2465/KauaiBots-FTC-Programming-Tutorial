@@ -6,12 +6,11 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.seattlesolvers.solverslib.command.Command;
-import com.seattlesolvers.solverslib.command.FunctionalCommand;
-import com.seattlesolvers.solverslib.command.Subsystem;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 
 
 import org.apache.commons.math3.stat.StatUtils;
+import org.apache.commons.math3.stat.regression.SimpleRegression;
 import org.firstinspires.ftc.teamcode.OverrideCommand;
 
 import java.util.ArrayList;
@@ -37,10 +36,11 @@ public class FlywheelSubsystem extends SubsystemBase {
     private double kS = 0;
 
     // Behavior Monitoring
-    private int jamCounter = 0;
+    private int jamCount = 0;
     private boolean isJammed = false;
     private final int JAMMED_WHEN_COUNT_IS = 50;
     private final double JAMMED_WHEN_RPM_BELOW = 60;
+    private int stabilityCount = 0;
 
     public FlywheelSubsystem(HardwareMap hardwareMap,
                              VoltageSensor controlHubVSensor,
@@ -82,11 +82,51 @@ public class FlywheelSubsystem extends SubsystemBase {
             flywheelMotor.setPower(motorVoltage / batteryVoltage);
         }
         boolean possibleJam = (motorVoltage > kS * 2d && getCurrentRPM() < JAMMED_WHEN_RPM_BELOW);
-        jamCounter = possibleJam ? jamCounter+1 : 0;
-        isJammed = jamCounter >= JAMMED_WHEN_COUNT_IS;
+        jamCount = possibleJam ? jamCount+1 : 0;
+        isJammed = jamCount >= JAMMED_WHEN_COUNT_IS;
     }
 
     private double getCurrentRPM() {
         return encoderMotor.getVelocity() / countsPerFlywheelRotation * 60d;
+    }
+
+    public Command cmdTuneMotorConstants() {
+        return new OverrideCommand(this) {
+            private double requestedVoltage;
+
+            private double lastRPM;
+            private final int TUNING_STABILITY_REQUIREMENT = 10;
+            private int measurementCount;
+            private double totalRPM;
+            private final int SAMPLES_TO_AVERAGE = 200;
+            private final SimpleRegression regression = new SimpleRegression();
+
+            @Override
+            public void initialize() {
+                requestedVoltage = .15d * 12d;
+                motorVoltageSupplier = () -> requestedVoltage;
+                lastRPM = 0;
+                stabilityCount = 0;
+                measurementCount = 0;
+                totalRPM = 0;
+                regression.clear();
+            }
+
+            @Override
+            public void execute() {
+                double currentRPM = getCurrentRPM();
+                if (currentRPM < lastRPM) stabilityCount++;
+                lastRPM = currentRPM;
+                if (stabilityCount < TUNING_STABILITY_REQUIREMENT) return;
+                totalRPM += getCurrentRPM();
+                measurementCount++;
+                if (measurementCount < SAMPLES_TO_AVERAGE) return;
+                regression.addData(totalRPM / measurementCount, requestedVoltage);
+                stabilityCount = 0;
+                measurementCount = 0;
+                totalRPM = 0;
+                requestedVoltage += 1d;
+            }
+        };
     }
 }
