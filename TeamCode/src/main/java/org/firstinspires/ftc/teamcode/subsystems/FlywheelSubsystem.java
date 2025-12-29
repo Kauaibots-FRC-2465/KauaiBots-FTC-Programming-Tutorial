@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.seattlesolvers.solverslib.command.Command;
+import com.seattlesolvers.solverslib.command.InstantCommand;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 
 
@@ -33,7 +34,7 @@ public class FlywheelSubsystem extends SubsystemBase {
     private double[] voltageHistory = {12d, 12d, 12d, 12d, 12d, 12d, 12d, 12d};
     private double batteryVoltage = 12d;
     private final DoubleSupplier idle = () -> 0;
-    private DoubleSupplier motorVoltageSupplier = idle; // Commands must provide their own supplier
+    private DoubleSupplier motorVoltageSupplier; // Commands must provide their own supplier
     private double motorVoltage;
     private double kS = 0;
 
@@ -86,11 +87,16 @@ public class FlywheelSubsystem extends SubsystemBase {
         boolean possibleJam = (motorVoltage > kS * 2d && getCurrentRPM() < JAMMED_WHEN_RPM_BELOW);
         jamCount = possibleJam ? jamCount+1 : 0;
         isJammed = jamCount >= JAMMED_WHEN_COUNT_IS;
+        setDefaultCommand(cmdIdle());
     }
 
     private double getCurrentRPM() {
         if (encoderMotor == null) return 0;
         return encoderMotor.getVelocity() / countsPerFlywheelRotation * 60d;
+    }
+
+    public Command cmdIdle() {
+        return new InstantCommand(() -> motorVoltageSupplier = idle);
     }
 
     public Command cmdTuneMotorConstants() {
