@@ -36,6 +36,9 @@ public class DecodeTuning extends CommandOpMode {
         driverGamepad = new GamepadEx(gamepad1);
         tuneMotorConstantsButton = new GamepadButton(driverGamepad, GamepadKeys.Button.A);
         idleButton = new GamepadButton(driverGamepad, GamepadKeys.Button.B);
+        tunePidButton = new GamepadButton(driverGamepad, GamepadKeys.Button.X);
+        increasePButton = new GamepadButton(driverGamepad, GamepadKeys.Button.DPAD_UP;
+        decreasePButton = new GamepadButton(driverGamepad, GamepadKeys.Button.DPAD_DOWN);
         tuneMotorConstantsButton.whenPressed(fs.cmdTuneMotorConstants());
         idleButton.whenPressed(fs.cmdIdle());
         tunePidButton.whileHeld(fs.cmdTuneWithTelemetry(()->1500d, ()->false));
