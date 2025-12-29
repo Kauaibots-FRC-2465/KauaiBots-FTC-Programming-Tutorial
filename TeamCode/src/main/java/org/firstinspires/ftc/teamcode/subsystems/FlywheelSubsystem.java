@@ -17,6 +17,7 @@ import com.seattlesolvers.solverslib.command.WaitUntilCommand;
 import com.seattlesolvers.solverslib.controller.PIDController;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.apache.commons.math3.stat.StatUtils;
 import org.apache.commons.math3.stat.regression.SimpleRegression;
 import org.firstinspires.ftc.teamcode.OverrideCommand;
 
@@ -98,19 +99,16 @@ public class FlywheelSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        if (flywheelMotors.isEmpty()) throw new IllegalStateException("ASSERTION FAILED: You" +
-                " must call addFlywheelMotor at least once on your FlywheelSubsystem.");
-        for (int index = 0; index < voltageHistory.length - 1; index++)
-            voltageHistory[index] = voltageHistory[index + 1];
-        voltageHistory[voltageHistory.length - 1] = controlHubVSensor.getVoltage();
-        batteryVoltage = Arrays.stream(voltageHistory).sum() / voltageHistory.length;
-        double voltage = motorVoltageSupplier.getAsDouble();
+        System.arraycopy(voltageHistory, 0, voltageHistory, 1, voltageHistory.length - 1);
+        voltageHistory[0] = controlHubVSensor.getVoltage();
+        batteryVoltage = StatUtils.mean(voltageHistory);
+        motorVoltage = motorVoltageSupplier.getAsDouble();
         for (DcMotorEx flywheelMotor : flywheelMotors) {
-            flywheelMotor.setPower(voltage / batteryVoltage);
+            flywheelMotor.setPower(motorVoltage / batteryVoltage);
         }
-        double currentRPM = getCurrentRPM();
-        jamCounter = (voltage > kS * 2d && currentRPM < JAMMED_WHEN_RPM_BELOW) ? (jamCounter + 1) : 0;
-        isJammed = jamCounter > JAMMED_WHEN_COUNT_IS;
+        boolean possibleJam = (motorVoltage > kS * 2d && getCurrentRPM() < JAMMED_WHEN_RPM_BELOW);
+        jamCounter = possibleJam ? jamCounter+1 : 0;
+        isJammed = jamCounter >= JAMMED_WHEN_COUNT_IS;
     }
 
     private double getCurrentRPM() {
