@@ -173,6 +173,7 @@ public class FlywheelSubsystem extends SubsystemBase {
             public void end(boolean interrupted) {
                 kS = regression.getIntercept();
                 kV = regression.getSlope();
+                if (pidP==0) basicPID.setP(pidP = kV*8);
                 Log.i("FTC20311", "detected kS = " + kS);
                 Log.i("FTC20311", "detected kV = " + kV);
             }
@@ -254,6 +255,30 @@ public class FlywheelSubsystem extends SubsystemBase {
         }, cmdLog("Launch ended"));
     }
 
+    public boolean getIsJammed() {
+        return isJammed;
+    }
+
+    public Command cmdUnjam(double power, double cycletime) {
+        return new OverrideCommand(this) {
+            ElapsedTime elapsedTime = new ElapsedTime();
+            double unjamVoltage;
+
+            @Override
+            public void initialize() {
+                elapsedTime.reset();
+                unjamVoltage = power*12;
+                motorVoltageSupplier = () -> {
+                    if (elapsedTime.seconds() >= cycletime/2) {
+                        elapsedTime.reset();
+                        unjamVoltage *= -1;
+                    }
+                    return unjamVoltage;
+                };
+            }
+        };
+    }
+
     public Command cmdTuneWithTelemetry(DoubleSupplier rpm, BooleanSupplier isFinished) {
         Log.i("FTC20311", "Panels is located at http://192.168.43.1:8001");
         return cmdSetRPM(rpm, () -> {
@@ -280,25 +305,5 @@ public class FlywheelSubsystem extends SubsystemBase {
             pidP-=Math.abs(deltaP);
             basicPID.setP(pidP);
         });
-    }
-
-    public Command cmdUnjam(double power, double cycletime) {
-        return new OverrideCommand(this) {
-            ElapsedTime elapsedTime = new ElapsedTime();
-            double unjamPower;
-
-            @Override
-            public void initialize() {
-                elapsedTime.reset();
-                unjamPower = power;
-                motorVoltageSupplier = () -> {
-                    if (elapsedTime.seconds() >= cycletime/2) {
-                        elapsedTime.reset();
-                        unjamPower *= -1;
-                    }
-                    return unjamPower;
-                };
-            }
-        };
     }
 }
