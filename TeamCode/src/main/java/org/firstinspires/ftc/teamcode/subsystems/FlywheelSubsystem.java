@@ -103,7 +103,7 @@ public class FlywheelSubsystem extends SubsystemBase {
 
             @Override
             public void initialize() {
-                requestedVoltage = .15d * 12d;
+                requestedVoltage = 2d;
                 motorVoltageSupplier = () -> requestedVoltage;
                 lastRPM = 0;
                 stabilityCount = 0;
