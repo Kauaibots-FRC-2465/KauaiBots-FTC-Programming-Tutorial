@@ -9,12 +9,14 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.seattlesolvers.solverslib.command.Command;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
+import com.seattlesolvers.solverslib.controller.PIDController;
 
 import org.apache.commons.math3.stat.StatUtils;
 import org.apache.commons.math3.stat.regression.SimpleRegression;
 import org.firstinspires.ftc.teamcode.OverrideCommand;
 
 import java.util.ArrayList;
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
 public class FlywheelSubsystem extends SubsystemBase {
@@ -35,6 +37,9 @@ public class FlywheelSubsystem extends SubsystemBase {
     private DoubleSupplier motorVoltageSupplier = idle; // Commands must provide their own supplier
     private double motorVoltage;
     private double kS = 0;
+    private double kV = 0;
+    private double pidP = kV*8;
+    private PIDController basicPID = new PIDController(pidP, 0, 0);
 
     // Behavior Monitoring
     private int jamCount = 0;
@@ -42,6 +47,8 @@ public class FlywheelSubsystem extends SubsystemBase {
     private final int JAMMED_WHEN_COUNT_IS = 50;
     private final double JAMMED_WHEN_RPM_BELOW = 60;
     private int stabilityCount;
+    private boolean isStable;
+    private final int STABLE_WHEN_AT_SETPOINT_COUNT = 5;
 
     public FlywheelSubsystem(HardwareMap hardwareMap,
                              VoltageSensor controlHubVSensor,
@@ -117,10 +124,7 @@ public class FlywheelSubsystem extends SubsystemBase {
             public void initialize() {
                 requestedVoltage = 2d;
                 motorVoltageSupplier = () -> requestedVoltage;
-                lastRPM = 0;
-                stabilityCount = 0;
-                measurementCount = 0;
-                totalRPM = 0;
+                totalRPM = lastRPM = stabilityCount = measurementCount = 0;
                 regression.clear();
             }
 
@@ -134,8 +138,7 @@ public class FlywheelSubsystem extends SubsystemBase {
                 measurementCount++;
                 if (measurementCount < SAMPLES_TO_AVERAGE) return;
                 regression.addData(totalRPM / measurementCount, requestedVoltage);
-                stabilityCount = 0;
-                measurementCount = 0;
+                stabilityCount = measurementCount = 0;
                 totalRPM = 0;
                 requestedVoltage += 1d;
             }
@@ -147,9 +150,80 @@ public class FlywheelSubsystem extends SubsystemBase {
 
             @Override
             public void end(boolean interrupted) {
-                Log.i("FTC20311", "detected kS = " + regression.getIntercept());
-                Log.i("FTC20311", "detected kV = " + regression.getSlope());
+                kS = regression.getIntercept();
+                kV = regression.getSlope();
+                Log.i("FTC20311", "detected kS = " + kS);
+                Log.i("FTC20311", "detected kV = " + kV);
             }
         };
+    }
+
+    public Command cmdSetRPM(DoubleSupplier rpm, BooleanSupplier isFinished) {
+        return new OverrideCommand (this) {
+
+            @Override
+            public void initialize() {
+                basicPID.setTolerance(60);
+                motorVoltageSupplier = () -> {
+                    basicPID.setSetPoint(rpm.getAsDouble());
+                    double correction = basicPID.calculate(getCurrentRPM());
+                    return correction + kS + kV * rpm.getAsDouble();
+                };
+                isStable = false;
+                stabilityCount = 0;
+            }
+
+            @Override
+            public void execute() {
+                double currentRPM = getCurrentRPM();
+
+                if (basicPID.atSetPoint()) ++stabilityCount; else stabilityCount = 0;
+                isStable = stabilityCount >= STABLE_WHEN_AT_SETPOINT_COUNT;
+            }
+
+            @Override
+            public boolean isFinished() {
+                return isFinished.getAsBoolean();
+            }
+        };
+    }
+
+    public Command cmdWaitLaunchStart (double rpm) {
+        return new OverrideCommand () {
+            private final double SHOT_STARTS_WHEN_RPM_DROPS = 200;
+
+            @Override
+            public boolean isFinished() {
+                return getCurrentRPM() <= rpm - SHOT_STARTS_WHEN_RPM_DROPS;
+            }
+        };
+    }
+
+    public Command cmdWaitLaunchEnd (double rpm) {
+        return cmdWaitLaunchStart(rpm).andThen(new OverrideCommand() {
+            private double lastVelocity;
+            private int launchVelocityRiseCount;
+            private final int LAUNCH_COMPLETE_WHEN_VELOCITY_RISE_COUNT = 5;
+
+            @Override
+            public void initialize() {
+                lastVelocity=getCurrentRPM();
+                launchVelocityRiseCount = 0;
+            }
+
+            @Override
+            public void execute() {
+                double currentRPM = getCurrentRPM();
+                if (currentRPM > lastVelocity || basicPID.atSetPoint()) {
+                    launchVelocityRiseCount++;
+                }
+                lastVelocity = currentRPM;
+            }
+
+            @Override
+            public boolean isFinished() {
+                return launchVelocityRiseCount >= LAUNCH_COMPLETE_WHEN_VELOCITY_RISE_COUNT;
+            }
+        });
     }
 }
