@@ -246,49 +246,4 @@ public class FlywheelSubsystem extends SubsystemBase {
 
     }
 
-    public Command resetStabilityTolerance()
-    {
-        return new InstantCommand(()->this.stabilityTolerance = 60);
-    }
-
-    public Command setStabilityTolerance(double stabilityTolerance)
-    {
-        return new InstantCommand(()->this.stabilityTolerance = stabilityTolerance);
-    }
-
-    public Command cmdWaitUntilStable()
-    {
-        return new WaitUntilCommand(()->isStable);
-    }
-
-    public Command cmdWaitLaunchStart (double rpm, double triggerDelta) {
-        return new WaitUntilCommand(()-> getMeasuredRPM() <= rpm - triggerDelta);
-    }
-
-    public Command cmdWaitLaunchEnd (int minimumRiseCount) {
-        return new OverrideCommand() {
-            private double lastVelocity;
-            private int launchVelocityRiseCount;
-
-            @Override
-            public void initialize() {
-                lastVelocity= getMeasuredRPM();
-                launchVelocityRiseCount = 0;
-            }
-
-            @Override
-            public void execute() {
-                double measuredRPM = getMeasuredRPM();
-                if (measuredRPM > lastVelocity || isStable) {
-                    launchVelocityRiseCount++;
-                }
-                lastVelocity = measuredRPM;
-            }
-
-            @Override
-            public boolean isFinished() {
-                return launchVelocityRiseCount >= minimumRiseCount;
-            }
-        };
-    }
 }
