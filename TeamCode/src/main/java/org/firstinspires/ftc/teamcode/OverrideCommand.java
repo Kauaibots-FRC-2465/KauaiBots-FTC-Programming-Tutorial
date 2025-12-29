@@ -7,7 +7,7 @@ public class OverrideCommand extends FunctionalCommand {
     public OverrideCommand(Subsystem... requirements) {
         super (()->{},
                 ()->{},
-                (Boolean interrupted)->{},
+                (interrupted)->{},
                 ()->false, requirements);
     }
 }
