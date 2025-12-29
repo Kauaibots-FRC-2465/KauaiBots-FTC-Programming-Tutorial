@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.seattlesolvers.solverslib.command.CommandOpMode;
 import com.seattlesolvers.solverslib.command.button.GamepadButton;
@@ -25,6 +26,8 @@ public class DecodeTuning extends CommandOpMode {
                     "  You may need to power cycle the Robot.");
         }
         fs = new FlywheelSubsystem(hardwareMap, controlHubVSensor, 28, 3);
+        fs.addFlywheelMotor("shooter1", DcMotorSimple.Direction.REVERSE);
+        fs.addFlywheelMotor("shooter2", DcMotorSimple.Direction.REVERSE);
         driverGamepad = new GamepadEx(gamepad1);
         flywheelTuneMotorConstantsButton = new GamepadButton(driverGamepad, GamepadKeys.Button.A);
         flywheelIdleButton = new GamepadButton(driverGamepad, GamepadKeys.Button.B);
