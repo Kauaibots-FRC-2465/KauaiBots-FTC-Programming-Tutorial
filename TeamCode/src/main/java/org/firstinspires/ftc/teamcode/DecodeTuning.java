@@ -15,9 +15,8 @@ public class DecodeTuning extends CommandOpMode {
     private FlywheelSubsystem fs;
     private VoltageSensor controlHubVSensor = null;
     private GamepadEx driverGamepad;
-    private GamepadButton
-            findMotorConstantsButton,
-            idleButton;
+    private GamepadButton findMotorConstantsButton;
+    private GamepadButton idleButton;
     @Override
     public void initialize() {
         try {

@@ -35,7 +35,7 @@ public class FlywheelSubsystem extends SubsystemBase {
     private double batteryVoltage = 12d;
     private double kS = 0.48;
     private double kV = 0.00252;
-    private double pidP = kV*8;
+    private double pidP = 0.02016;
     private PIDController basicPID = new PIDController(pidP, 0, 0);
     private double motorVoltage;
 
@@ -45,7 +45,7 @@ public class FlywheelSubsystem extends SubsystemBase {
     private DoubleSupplier motorVoltageSupplier = stop; // Commands change this to their own supplier
 
     // Behavior Monitoring
-    private int jammedCount = 0;
+    private int jamCount = 0;
     private boolean isJammed = false;
     private final int JAMMED_WHEN_COUNT_IS = 50;
     private final double JAMMED_WHEN_RPM_BELOW = 60;
@@ -99,9 +99,9 @@ public class FlywheelSubsystem extends SubsystemBase {
         double measuredRPM = getMeasuredRPM();
         boolean possibleJam = (motorVoltage > kS * 2d && measuredRPM < JAMMED_WHEN_RPM_BELOW);
         boolean rpmWithinTolerance = Math.abs(measuredRPM-stableRPM) < stabilityTolerance;
-        jammedCount = possibleJam ? jammedCount +1 : 0;
+        jamCount = possibleJam ? jamCount +1 : 0;
         stableCount = rpmWithinTolerance ? stableCount +1 : 0;
-        isJammed = jammedCount >= JAMMED_WHEN_COUNT_IS;
+        isJammed = jamCount >= JAMMED_WHEN_COUNT_IS;
         isStable = stableCount >= STABLE_WHEN_AT_SETPOINT_COUNT;
     }
 
