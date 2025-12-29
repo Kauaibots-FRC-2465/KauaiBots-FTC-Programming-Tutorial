@@ -56,7 +56,7 @@ public class FlywheelSubsystem extends SubsystemBase {
                 " flywheelDiameterInches cannot be 0.");
         if (countsPerFlywheelRotation == 0) throw new IllegalArgumentException ("ASSERTION FAILED:"+
                 " countsPerFlywheelRotation cannot be 0.");
-        setDefaultCommand(cmdIdle());
+        setDefaultCommand(cmdStop());
     }
 
     public void addFlywheelMotor(String motorName, DcMotorSimple.Direction direction) {
@@ -94,7 +94,7 @@ public class FlywheelSubsystem extends SubsystemBase {
         return encoderMotor.getVelocity() / countsPerFlywheelRotation * 60d;
     }
 
-    public Command cmdIdle() {
+    public Command cmdStop() {
         return new OverrideCommand (this){
             @Override
             public void initialize() {
@@ -103,7 +103,7 @@ public class FlywheelSubsystem extends SubsystemBase {
         };
     }
 
-    public Command cmdTuneMotorConstants() {
+    public Command cmdFindMotorConstants() {
         return new OverrideCommand(this) {
             private double requestedVoltage;
 
