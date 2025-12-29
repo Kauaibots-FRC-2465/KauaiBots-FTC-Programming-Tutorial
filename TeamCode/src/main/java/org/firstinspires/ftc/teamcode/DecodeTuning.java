@@ -16,9 +16,9 @@ public class DecodeTuning extends CommandOpMode {
     private VoltageSensor controlHubVSensor = null;
     private GamepadEx driverGamepad;
     private GamepadButton
-            tuneMotorConstantsButton,
+            findMotorConstantsButton,
             idleButton,
-            tunePidButton,
+            tuneButton,
             increasePButton,
             decreasePButton;
     @Override
@@ -34,14 +34,14 @@ public class DecodeTuning extends CommandOpMode {
         fs.addFlywheelMotor("shooter1", DcMotorSimple.Direction.REVERSE);
         fs.addFlywheelMotor("shooter2", DcMotorSimple.Direction.REVERSE);
         driverGamepad = new GamepadEx(gamepad1);
-        tuneMotorConstantsButton = new GamepadButton(driverGamepad, GamepadKeys.Button.A);
-        idleButton = new GamepadButton(driverGamepad, GamepadKeys.Button.B);
-        tunePidButton = new GamepadButton(driverGamepad, GamepadKeys.Button.X);
+        findMotorConstantsButton = new GamepadButton(driverGamepad, GamepadKeys.Button.CROSS); // aka A;
+        idleButton = new GamepadButton(driverGamepad, GamepadKeys.Button.CIRCLE); // aka B
+        tuneButton = new GamepadButton(driverGamepad, GamepadKeys.Button.SQUARE); // aka X
         increasePButton = new GamepadButton(driverGamepad, GamepadKeys.Button.DPAD_UP);
         decreasePButton = new GamepadButton(driverGamepad, GamepadKeys.Button.DPAD_DOWN);
-        tuneMotorConstantsButton.whenPressed(fs.cmdTuneMotorConstants());
-        idleButton.whenPressed(fs.cmdIdle());
-        tunePidButton.whileHeld(fs.cmdTunePIDWithTelemetry(1500d));
+        findMotorConstantsButton.whenPressed(fs.cmdFindMotorConstants());
+        idleButton.whenPressed(fs.cmdStop());
+        tuneButton.whenHeld(fs.cmdTuneWithTelemetry(1500d));
         increasePButton.whenPressed(fs.cmdIncreaseP());
         decreasePButton.whenPressed(fs.cmdDecreaseP());
     }

@@ -45,9 +45,9 @@ public class FlywheelSubsystem extends SubsystemBase {
     private double motorVoltage;
 
     // command inputs
-    private final DoubleSupplier idle = () -> 0;
-    private DoubleSupplier stableRPMSupplier = idle; // Commands must provide their own supplier
-    private DoubleSupplier motorVoltageSupplier = idle; // Commands must provide their own supplier
+    private final DoubleSupplier stop = () -> 0;
+    private DoubleSupplier stableRPMSupplier = stop; // Commands change this to their own supplier
+    private DoubleSupplier motorVoltageSupplier = stop; // Commands change this to their own supplier
 
     // Behavior Monitoring
     private int jammedCount = 0;
@@ -58,7 +58,7 @@ public class FlywheelSubsystem extends SubsystemBase {
     private boolean isStable = false;
     private double stableRPM;
     private double stabilityTolerance = 60;
-    private final int STABLE_WHEN_AT_SETPOINT_COUNT = 5;
+    private final int STABLE_WHEN_AT_SETPOINT_COUNT = 6;
 
     // Telemetry
     private TelemetryManager panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
@@ -75,7 +75,7 @@ public class FlywheelSubsystem extends SubsystemBase {
                 " flywheelDiameterInches cannot be 0.");
         if (countsPerFlywheelRotation == 0) throw new IllegalArgumentException ("ASSERTION FAILED:"+
                 " countsPerFlywheelRotation cannot be 0.");
-        setDefaultCommand(cmdIdle());
+        setDefaultCommand(cmdStop());
     }
 
     public void addFlywheelMotor(String motorName, DcMotorSimple.Direction direction) {
@@ -118,17 +118,25 @@ public class FlywheelSubsystem extends SubsystemBase {
         return encoderMotor.getVelocity() / countsPerFlywheelRotation * 60d;
     }
 
-    public Command cmdIdle() {
+    public boolean getIsJammed() {
+        return isJammed;
+    }
+
+    public boolean getIsStable() {
+        return isStable;
+    }
+
+    public Command cmdStop() {
         return new OverrideCommand (this){
             @Override
             public void initialize() {
-                stableRPMSupplier = idle;
-                motorVoltageSupplier = idle;
+                stableRPMSupplier = stop;
+                motorVoltageSupplier = stop;
             }
         };
     }
 
-    public Command cmdTuneMotorConstants() {
+    public Command cmdFindMotorConstants() {
         return new OverrideCommand(this) {
             private double requestedVoltage;
 
@@ -143,7 +151,7 @@ public class FlywheelSubsystem extends SubsystemBase {
             @Override
             public void initialize() {
                 requestedVoltage = 2d;
-                stableRPMSupplier = idle;
+                stableRPMSupplier = stop;
                 motorVoltageSupplier = () -> requestedVoltage;
                 totalRPM = lastRPM = peakCount = measurementCount = 0;
                 regression.clear();
@@ -173,6 +181,7 @@ public class FlywheelSubsystem extends SubsystemBase {
 
             @Override
             public void end(boolean interrupted) {
+                if (requestedVoltage <= 10) return;
                 kS = regression.getIntercept();
                 kV = regression.getSlope();
                 if (pidP==0) basicPID.setP(pidP = kV*8);
@@ -184,7 +193,6 @@ public class FlywheelSubsystem extends SubsystemBase {
 
     public Command cmdSetRPM(DoubleSupplier rpm, BooleanSupplier isFinished) {
         return new OverrideCommand (this) {
-
             @Override
             public void initialize() {
                 stableRPMSupplier = () -> rpm.getAsDouble();
@@ -208,9 +216,11 @@ public class FlywheelSubsystem extends SubsystemBase {
     }
 
 
-    public Command cmdTunePIDWithTelemetry(double rpm) {
+    public Command cmdTuneWithTelemetry(double rpm) {
         Log.i("FTC20311", "Panels is located at http://192.168.43.1:8001");
         return cmdSetRPM(()->rpm, () -> {
+            if(stableCount<STABLE_WHEN_AT_SETPOINT_COUNT)
+                Log.i("FTC20311", "stablecount = "+stableCount); // lots eat a lot of time
             panelsTelemetry.addData("flywheel/measured rpm", getMeasuredRPM());
             panelsTelemetry.addData("flywheel/requested rpm", stableRPM);
             panelsTelemetry.addData("flywheel/stabilityCount", Math.min(stableCount, STABLE_WHEN_AT_SETPOINT_COUNT));
@@ -237,10 +247,6 @@ public class FlywheelSubsystem extends SubsystemBase {
 
     }
 
-    public Command cmdLog (String info) {
-        return new InstantCommand(()->Log.i("FTC20311", info));
-    }
-
     public Command resetStabilityTolerance()
     {
         return new InstantCommand(()->this.stabilityTolerance = 60);
@@ -257,12 +263,11 @@ public class FlywheelSubsystem extends SubsystemBase {
     }
 
     public Command cmdWaitLaunchStart (double rpm, double triggerDelta) {
-        return new WaitUntilCommand(()-> getMeasuredRPM() <= rpm - triggerDelta)
-                .andThen(cmdLog("Launch started"));
+        return new WaitUntilCommand(()-> getMeasuredRPM() <= rpm - triggerDelta);
     }
 
-    public Command cmdWaitLaunchEnd (double rpm, double triggerDelta, int minimumRiseCount) {
-        return cmdWaitLaunchStart(rpm, triggerDelta).andThen(new OverrideCommand() {
+    public Command cmdWaitLaunchEnd (int minimumRiseCount) {
+        return new OverrideCommand() {
             private double lastVelocity;
             private int launchVelocityRiseCount;
 
@@ -285,11 +290,7 @@ public class FlywheelSubsystem extends SubsystemBase {
             public boolean isFinished() {
                 return launchVelocityRiseCount >= minimumRiseCount;
             }
-        }, cmdLog("Launch ended"));
-    }
-
-    public boolean getIsJammed() {
-        return isJammed;
+        };
     }
 
     public Command cmdUnjam(double power, double secondsPerReversal) {
