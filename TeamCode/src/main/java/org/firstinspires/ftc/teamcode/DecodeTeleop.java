@@ -75,8 +75,8 @@ public class DecodeTeleop extends CommandOpMode {
         reorientButton.whenPressed(reorient).whenPressed(goFieldOriented);
         driverCentricButton.whenPressed(goDriverCentric);
 
-        unjamButton.whileHeld(unjam);
         launchButton.whenPressed(launch);
+        unjamButton.whileHeld(unjam);
     }
     public Command cmdLog (String info) {
         return new InstantCommand(()-> Log.i("FTC20311", info));
