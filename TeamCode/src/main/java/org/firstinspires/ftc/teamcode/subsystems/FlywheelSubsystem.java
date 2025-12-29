@@ -87,6 +87,7 @@ public class FlywheelSubsystem extends SubsystemBase {
     }
 
     private double getCurrentRPM() {
+        if (encoderMotor == null) return 0;
         return encoderMotor.getVelocity() / countsPerFlywheelRotation * 60d;
     }
 }
