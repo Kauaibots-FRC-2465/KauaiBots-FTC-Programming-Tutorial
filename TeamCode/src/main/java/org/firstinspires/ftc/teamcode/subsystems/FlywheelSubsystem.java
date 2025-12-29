@@ -5,14 +5,10 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
-import com.seattlesolvers.solverslib.command.Command;
-import com.seattlesolvers.solverslib.command.FunctionalCommand;
-import com.seattlesolvers.solverslib.command.Subsystem;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 
 
 import org.apache.commons.math3.stat.StatUtils;
-import org.firstinspires.ftc.teamcode.OverrideCommand;
 
 import java.util.ArrayList;
 import java.util.function.DoubleSupplier;
@@ -37,7 +33,7 @@ public class FlywheelSubsystem extends SubsystemBase {
     private double kS = 0;
 
     // Behavior Monitoring
-    private int jamCounter = 0;
+    private int jamCount = 0;
     private boolean isJammed = false;
     private final int JAMMED_WHEN_COUNT_IS = 50;
     private final double JAMMED_WHEN_RPM_BELOW = 60;
@@ -83,8 +79,8 @@ public class FlywheelSubsystem extends SubsystemBase {
             flywheelMotor.setPower(motorVoltage / batteryVoltage);
         }
         boolean possibleJam = (motorVoltage > kS * 2d && getCurrentRPM() < JAMMED_WHEN_RPM_BELOW);
-        jamCounter = possibleJam ? jamCounter+1 : 0;
-        isJammed = jamCounter >= JAMMED_WHEN_COUNT_IS;
+        jamCount = possibleJam ? jamCount+1 : 0;
+        isJammed = jamCount >= JAMMED_WHEN_COUNT_IS;
     }
 
     private double getCurrentRPM() {
