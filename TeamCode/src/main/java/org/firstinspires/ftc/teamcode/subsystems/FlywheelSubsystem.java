@@ -127,6 +127,16 @@ public class FlywheelSubsystem extends SubsystemBase {
                 totalRPM = 0;
                 requestedVoltage += 1d;
             }
+
+            @Override
+            public boolean isFinished() {
+                return requestedVoltage > 10;
+            }
+
+            @Override
+            public void end(boolean interrupted) {
+
+            }
         };
     }
 }
