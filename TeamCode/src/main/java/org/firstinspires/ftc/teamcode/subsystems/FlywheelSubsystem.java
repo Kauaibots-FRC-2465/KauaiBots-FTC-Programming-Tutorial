@@ -89,13 +89,4 @@ public class FlywheelSubsystem extends SubsystemBase {
     private double getCurrentRPM() {
         return encoderMotor.getVelocity() / countsPerFlywheelRotation * 60d;
     }
-
-    public Command cmdTuneKs() {
-        return new OverrideCommand(this) {
-            @Override
-            public void initialize() {
-            }
-        };
-    }
-
 }
