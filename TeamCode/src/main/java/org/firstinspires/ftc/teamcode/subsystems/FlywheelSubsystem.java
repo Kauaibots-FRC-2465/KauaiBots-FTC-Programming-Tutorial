@@ -5,14 +5,10 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
-import com.seattlesolvers.solverslib.command.Command;
-import com.seattlesolvers.solverslib.command.FunctionalCommand;
-import com.seattlesolvers.solverslib.command.Subsystem;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 
 
 import org.apache.commons.math3.stat.StatUtils;
-import org.firstinspires.ftc.teamcode.OverrideCommand;
 
 import java.util.ArrayList;
 import java.util.function.DoubleSupplier;
@@ -32,12 +28,12 @@ public class FlywheelSubsystem extends SubsystemBase {
     private double[] voltageHistory = {12d, 12d, 12d, 12d, 12d, 12d, 12d, 12d};
     private double batteryVoltage = 12d;
     private final DoubleSupplier idle = () -> 0;
-    private DoubleSupplier motorVoltageSupplier = idle; // Commands must provide their own supplier
+    private DoubleSupplier motorVoltageSupplier; // Commands must provide their own supplier
     private double motorVoltage;
     private double kS = 0;
 
     // Behavior Monitoring
-    private int jamCounter = 0;
+    private int jamCount = 0;
     private boolean isJammed = false;
     private final int JAMMED_WHEN_COUNT_IS = 50;
     private final double JAMMED_WHEN_RPM_BELOW = 60;
@@ -54,6 +50,7 @@ public class FlywheelSubsystem extends SubsystemBase {
                 " flywheelDiameterInches cannot be 0.");
         if (countsPerFlywheelRotation == 0) throw new IllegalArgumentException ("ASSERTION FAILED:"+
                 " countsPerFlywheelRotation cannot be 0.");
+        setDefaultCommand(cmdIdle());
     }
 
     public void addFlywheelMotor(String motorName, DcMotorSimple.Direction direction) {
@@ -82,8 +79,8 @@ public class FlywheelSubsystem extends SubsystemBase {
             flywheelMotor.setPower(motorVoltage / batteryVoltage);
         }
         boolean possibleJam = (motorVoltage > kS * 2d && getCurrentRPM() < JAMMED_WHEN_RPM_BELOW);
-        jamCounter = possibleJam ? jamCounter+1 : 0;
-        isJammed = jamCounter >= JAMMED_WHEN_COUNT_IS;
+        jamCount = possibleJam ? jamCount+1 : 0;
+        isJammed = jamCount >= JAMMED_WHEN_COUNT_IS;
     }
 
     private double getCurrentRPM() {
