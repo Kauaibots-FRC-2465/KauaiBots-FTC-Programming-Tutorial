@@ -41,7 +41,7 @@ public class FlywheelSubsystem extends SubsystemBase {
     private double[] voltageHistory = {12d, 12d, 12d, 12d, 12d, 12d, 12d, 12d};
     private double batteryVoltage = 12d;
     private final DoubleSupplier idle = () -> 0;
-    private DoubleSupplier motorVoltageSupplier = idle; // Commands must provide their own supplier
+    private DoubleSupplier motorVoltageSupplier; // Commands must provide their own supplier
     private double motorVoltage;
     private final double kS = 0.48; // How many volt needed to break static friction
     private final double kV = 0.00252; // How many volts for each RPM
@@ -49,7 +49,7 @@ public class FlywheelSubsystem extends SubsystemBase {
     private PIDController basicPID = new PIDController(pidP, 0, 0);
 
     // Behavior Monitoring
-    private int jamCounter = 0;
+    private int jamCount = 0;
     private boolean isJammed = false;
     private final int JAMMED_WHEN_COUNT_IS = 50;
     private final double JAMMED_WHEN_RPM_BELOW = 60;
@@ -79,6 +79,7 @@ public class FlywheelSubsystem extends SubsystemBase {
                 " flywheelDiameterInches cannot be 0.");
         if (countsPerFlywheelRotation == 0) throw new IllegalArgumentException ("ASSERTION FAILED:"+
                 " countsPerFlywheelRotation cannot be 0.");
+        setDefaultCommand(cmdIdle());
     }
 
     public void addFlywheelMotor(String motorName, DcMotorSimple.Direction direction) {
@@ -107,39 +108,43 @@ public class FlywheelSubsystem extends SubsystemBase {
             flywheelMotor.setPower(motorVoltage / batteryVoltage);
         }
         boolean possibleJam = (motorVoltage > kS * 2d && getCurrentRPM() < JAMMED_WHEN_RPM_BELOW);
-        jamCounter = possibleJam ? jamCounter+1 : 0;
-        isJammed = jamCounter >= JAMMED_WHEN_COUNT_IS;
-        setDefaultCommand(cmdIdle());
+        jamCount = possibleJam ? jamCount+1 : 0;
+        isJammed = jamCount >= JAMMED_WHEN_COUNT_IS;
     }
 
     private double getCurrentRPM() {
+        if (encoderMotor == null) return 0;
         return encoderMotor.getVelocity() / countsPerFlywheelRotation * 60d;
     }
 
     public Command cmdIdle() {
-        return new InstantCommand(() -> motorVoltageSupplier = idle, this);
+        return new OverrideCommand (this){
+            @Override
+            public void initialize() {
+                motorVoltageSupplier = idle;
+            }
+        };
     }
 
     public Command cmdTuneKs() {
         return new OverrideCommand(this) {
-            private boolean finished;
             private double requestedVoltage;
-            private final SimpleRegression regression = new SimpleRegression();
-            private int velCount;
-            private double velTotal;
+
             private double lastRPM;
-            private final int TUNING_STABILITY_REQUIREMENT = 10; // how many decreases in RPM we
-            // have to see before we assume the flywheel is stable during tuning
+            private final int TUNING_STABILITY_REQUIREMENT = 10;
+            private int measurementCount;
+            private double totalRPM;
+            private final int SAMPLES_TO_AVERAGE = 200;
+            private final SimpleRegression regression = new SimpleRegression();
 
             @Override
             public void initialize() {
-                finished = false;
-                requestedVoltage = .15d*12d;
+                requestedVoltage = 2d;
                 motorVoltageSupplier = () -> requestedVoltage;
-                velCount = 0;
-                velTotal = 0.0;
                 lastRPM = 0;
                 stabilityCount = 0;
+                measurementCount = 0;
+                totalRPM = 0;
                 regression.clear();
 
                 Log.i("FTC20311", "running CmdTuneKs");
@@ -150,31 +155,26 @@ public class FlywheelSubsystem extends SubsystemBase {
                 double currentRPM = getCurrentRPM();
                 if (currentRPM < lastRPM) stabilityCount++;
                 lastRPM = currentRPM;
-                if (stabilityCount > TUNING_STABILITY_REQUIREMENT) {
-                    ++velCount;
-                    velTotal += currentRPM;
-                    if (velCount == 200) {
-                        regression.addData(velTotal / velCount, requestedVoltage);
-                        Log.i("FTC20311", velTotal / velCount + "," + requestedVoltage);
-                        if (requestedVoltage < .84d*12d) {
-                            velCount = 0;
-                            velTotal = 0;
-                            requestedVoltage += .05*12d;
-                            stabilityCount = 0;
-                        } else finished = true;
-                    }
-                }
+                if (stabilityCount < TUNING_STABILITY_REQUIREMENT) return;
+                totalRPM += getCurrentRPM();
+                measurementCount++;
+                if (measurementCount < SAMPLES_TO_AVERAGE) return;
+                regression.addData(totalRPM / measurementCount, requestedVoltage);
+                stabilityCount = 0;
+                measurementCount = 0;
+                totalRPM = 0;
+                requestedVoltage += 1d;
+            }
+
+            @Override
+            public boolean isFinished() {
+                return requestedVoltage > 10;
             }
 
             @Override
             public void end(boolean interrupted) {
                 Log.i("FTC20311", "detected kS = " + regression.getIntercept());
                 Log.i("FTC20311", "detected kV = " + regression.getSlope());
-            }
-
-            @Override
-            public boolean isFinished() {
-                return finished;
             }
         };
     }
