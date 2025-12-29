@@ -104,16 +104,16 @@ public class FlywheelSubsystem extends SubsystemBase {
         for (DcMotorEx flywheelMotor : flywheelMotors) {
             flywheelMotor.setPower(motorVoltage / batteryVoltage);
         }
-        double currentRPM = getCurrentRPM();
-        boolean possibleJam = (motorVoltage > kS * 2d && currentRPM < JAMMED_WHEN_RPM_BELOW);
-        boolean rpmWithinTolerance = Math.abs(currentRPM-stableRPM) < stabilityTolerance;
+        double measuredRPM = getMeasuredRPM();
+        boolean possibleJam = (motorVoltage > kS * 2d && measuredRPM < JAMMED_WHEN_RPM_BELOW);
+        boolean rpmWithinTolerance = Math.abs(measuredRPM-stableRPM) < stabilityTolerance;
         jammedCount = possibleJam ? jammedCount +1 : 0;
         stableCount = rpmWithinTolerance ? stableCount +1 : 0;
         isJammed = jammedCount >= JAMMED_WHEN_COUNT_IS;
         isStable = stableCount >= STABLE_WHEN_AT_SETPOINT_COUNT;
     }
 
-    private double getCurrentRPM() {
+    private double getMeasuredRPM() {
         if (encoderMotor == null) return 0;
         return encoderMotor.getVelocity() / countsPerFlywheelRotation * 60d;
     }
@@ -151,11 +151,11 @@ public class FlywheelSubsystem extends SubsystemBase {
 
             @Override
             public void execute() {
-                double currentRPM = getCurrentRPM();
-                if (currentRPM < lastRPM) peakCount++;
-                lastRPM = currentRPM;
+                double measuredRPM = getMeasuredRPM();
+                if (measuredRPM < lastRPM) peakCount++;
+                lastRPM = measuredRPM;
                 if (peakCount < TUNING_STABILITY_REQUIREMENT) return;
-                totalRPM += getCurrentRPM();
+                totalRPM += getMeasuredRPM();
                 measurementCount++;
                 if (measurementCount < SAMPLES_TO_AVERAGE) return;
                 regression.addData(totalRPM / measurementCount, requestedVoltage);
@@ -188,7 +188,7 @@ public class FlywheelSubsystem extends SubsystemBase {
                 stableRPMSupplier = () -> rpm.getAsDouble();
                 motorVoltageSupplier = () -> {
                     basicPID.setSetPoint(rpm.getAsDouble());
-                    double correction = basicPID.calculate(getCurrentRPM());
+                    double correction = basicPID.calculate(getMeasuredRPM());
                     return correction + kS + kV * rpm.getAsDouble();
                 };
             }
@@ -224,7 +224,7 @@ public class FlywheelSubsystem extends SubsystemBase {
     }
 
     public Command cmdWaitLaunchStart (double rpm, double triggerDelta) {
-        return new WaitUntilCommand(()->getCurrentRPM() <= rpm - triggerDelta)
+        return new WaitUntilCommand(()-> getMeasuredRPM() <= rpm - triggerDelta)
                 .andThen(cmdLog("Launch started"));
     }
 
@@ -235,17 +235,17 @@ public class FlywheelSubsystem extends SubsystemBase {
 
             @Override
             public void initialize() {
-                lastVelocity=getCurrentRPM();
+                lastVelocity= getMeasuredRPM();
                 launchVelocityRiseCount = 0;
             }
 
             @Override
             public void execute() {
-                double currentRPM = getCurrentRPM();
-                if (currentRPM > lastVelocity || isStable) {
+                double measuredRPM = getMeasuredRPM();
+                if (measuredRPM > lastVelocity || isStable) {
                     launchVelocityRiseCount++;
                 }
-                lastVelocity = currentRPM;
+                lastVelocity = measuredRPM;
             }
 
             @Override
@@ -279,17 +279,17 @@ public class FlywheelSubsystem extends SubsystemBase {
         };
     }
 
-    public Command cmdTuneWithTelemetry(DoubleSupplier rpm, BooleanSupplier isFinished) {
+    public Command cmdTuneWithTelemetry(double rpm) {
         Log.i("FTC20311", "Panels is located at http://192.168.43.1:8001");
-        return cmdSetRPM(rpm, () -> {
-            panelsTelemetry.addData("flywheel/measured rpm", getCurrentRPM());
-            panelsTelemetry.addData("flywheel/requested rpm", rpm.getAsDouble());
+        return cmdSetRPM(()->rpm, () -> {
+            panelsTelemetry.addData("flywheel/measured rpm", getMeasuredRPM());
+            panelsTelemetry.addData("flywheel/requested rpm", stableRPM);
             panelsTelemetry.addData("flywheel/stabilityCount", Math.min(stableCount, STABLE_WHEN_AT_SETPOINT_COUNT));
             panelsTelemetry.addData("flywheel/isStable", isStable);
             panelsTelemetry.addData("flywheel/isJammed", isJammed);
             panelsTelemetry.addData("flywheel/PID P gain", pidP);
             panelsTelemetry.update();
-            return isFinished.getAsBoolean();
+            return false;
         });
     }
 
