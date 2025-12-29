@@ -2,17 +2,13 @@ package org.firstinspires.ftc.teamcode.subsystems;
 
 import android.util.Log;
 
-import com.bylazar.telemetry.PanelsTelemetry;
-import com.bylazar.telemetry.TelemetryManager;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.seattlesolvers.solverslib.command.Command;
-import com.seattlesolvers.solverslib.command.InstantCommand;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
-import com.seattlesolvers.solverslib.command.WaitUntilCommand;
 import com.seattlesolvers.solverslib.controller.PIDController;
 
 import org.apache.commons.math3.stat.StatUtils;
@@ -58,9 +54,6 @@ public class FlywheelSubsystem extends SubsystemBase {
     private double stableRPM;
     private double stabilityTolerance = 60;
     private final int STABLE_WHEN_AT_SETPOINT_COUNT = 6;
-
-    // Telemetry
-    private TelemetryManager panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
 
     public FlywheelSubsystem(HardwareMap hardwareMap,
                              VoltageSensor controlHubVSensor,
@@ -209,41 +202,7 @@ public class FlywheelSubsystem extends SubsystemBase {
         };
     }
 
-
     public Command cmdSetIPS(DoubleSupplier ips, BooleanSupplier isFinished) {
         return cmdSetRPM(() -> ips.getAsDouble() / Math.PI / flywheelDiameterInches * 60d, isFinished);
     }
-
-
-    public Command cmdTuneWithTelemetry(double rpm) {
-        Log.i("FTC20311", "Panels is located at http://192.168.43.1:8001");
-        return cmdSetRPM(()->rpm, () -> {
-            if(stableCount<STABLE_WHEN_AT_SETPOINT_COUNT)
-                Log.i("FTC20311", "stablecount = "+stableCount);
-            panelsTelemetry.addData("flywheel/measured rpm", getMeasuredRPM());
-            panelsTelemetry.addData("flywheel/requested rpm", stableRPM);
-            panelsTelemetry.addData("flywheel/stabilityCount", Math.min(stableCount, STABLE_WHEN_AT_SETPOINT_COUNT));
-            panelsTelemetry.addData("flywheel/isStable", isStable);
-            panelsTelemetry.addData("flywheel/isJammed", isJammed);
-            panelsTelemetry.addData("flywheel/PID P gain", pidP);
-            panelsTelemetry.update();
-            return false;
-        });
-    }
-
-    public Command cmdIncreaseP() {
-        return new InstantCommand(() -> {
-            pidP*=1.02;
-            basicPID.setP(pidP);
-        });
-    }
-
-    public Command cmdDecreaseP() {
-        return new InstantCommand(() -> {
-            pidP/=1.02;
-            basicPID.setP(pidP);
-        });
-
-    }
-
 }
