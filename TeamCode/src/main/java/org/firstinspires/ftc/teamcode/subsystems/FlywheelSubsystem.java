@@ -96,7 +96,12 @@ public class FlywheelSubsystem extends SubsystemBase {
     }
 
     public Command cmdIdle() {
-        return new InstantCommand(() -> motorVoltageSupplier = idle);
+        return new OverrideCommand (this){
+            @Override
+            public void initialize() {
+                motorVoltageSupplier = idle;
+            }
+        };
     }
 
     public Command cmdTuneMotorConstants() {
