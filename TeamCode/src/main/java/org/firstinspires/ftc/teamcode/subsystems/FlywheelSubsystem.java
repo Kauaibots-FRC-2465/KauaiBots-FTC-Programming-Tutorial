@@ -40,7 +40,7 @@ public class FlywheelSubsystem extends SubsystemBase {
     private double batteryVoltage = 12d;
     private double kS = 0;
     private double kV = 0;
-    private double pidP = kV*8;
+    private double pidP = 0;
     private PIDController basicPID = new PIDController(pidP, 0, 0);
     private double motorVoltage;
 
@@ -159,6 +159,8 @@ public class FlywheelSubsystem extends SubsystemBase {
                 measurementCount++;
                 if (measurementCount < SAMPLES_TO_AVERAGE) return;
                 regression.addData(totalRPM / measurementCount, requestedVoltage);
+                Log.i("FTC20311", "recorded (RPM <tab> volts) = " +
+                        totalRPM / measurementCount + "\t" + requestedVoltage);
                 peakCount = measurementCount = 0;
                 totalRPM = 0;
                 requestedVoltage += 1d;
@@ -200,8 +202,39 @@ public class FlywheelSubsystem extends SubsystemBase {
         };
     }
 
+
     public Command cmdSetIPS(DoubleSupplier ips, BooleanSupplier isFinished) {
         return cmdSetRPM(() -> ips.getAsDouble() / Math.PI / flywheelDiameterInches * 60d, isFinished);
+    }
+
+
+    public Command cmdTunePIDWithTelemetry(double rpm) {
+        Log.i("FTC20311", "Panels is located at http://192.168.43.1:8001");
+        return cmdSetRPM(()->rpm, () -> {
+            panelsTelemetry.addData("flywheel/measured rpm", getMeasuredRPM());
+            panelsTelemetry.addData("flywheel/requested rpm", stableRPM);
+            panelsTelemetry.addData("flywheel/stabilityCount", Math.min(stableCount, STABLE_WHEN_AT_SETPOINT_COUNT));
+            panelsTelemetry.addData("flywheel/isStable", isStable);
+            panelsTelemetry.addData("flywheel/isJammed", isJammed);
+            panelsTelemetry.addData("flywheel/PID P gain", pidP);
+            panelsTelemetry.update();
+            return false;
+        });
+    }
+
+    public Command cmdIncreaseP() {
+        return new InstantCommand(() -> {
+            pidP*=1.02;
+            basicPID.setP(pidP);
+        });
+    }
+
+    public Command cmdDecreaseP() {
+        return new InstantCommand(() -> {
+            pidP/=1.02;
+            basicPID.setP(pidP);
+        });
+
     }
 
     public Command cmdLog (String info) {
@@ -277,33 +310,5 @@ public class FlywheelSubsystem extends SubsystemBase {
                 };
             }
         };
-    }
-
-    public Command cmdTuneWithTelemetry(double rpm) {
-        Log.i("FTC20311", "Panels is located at http://192.168.43.1:8001");
-        return cmdSetRPM(()->rpm, () -> {
-            panelsTelemetry.addData("flywheel/measured rpm", getMeasuredRPM());
-            panelsTelemetry.addData("flywheel/requested rpm", stableRPM);
-            panelsTelemetry.addData("flywheel/stabilityCount", Math.min(stableCount, STABLE_WHEN_AT_SETPOINT_COUNT));
-            panelsTelemetry.addData("flywheel/isStable", isStable);
-            panelsTelemetry.addData("flywheel/isJammed", isJammed);
-            panelsTelemetry.addData("flywheel/PID P gain", pidP);
-            panelsTelemetry.update();
-            return false;
-        });
-    }
-
-    public Command cmdIncreaseP(double deltaP) {
-        return new InstantCommand(() -> {
-            pidP+=Math.abs(deltaP);
-            basicPID.setP(pidP);
-        });
-    }
-
-    public Command cmdDecreaseP(double deltaP) {
-        return new InstantCommand(() -> {
-            pidP-=Math.abs(deltaP);
-            basicPID.setP(pidP);
-        });
     }
 }
