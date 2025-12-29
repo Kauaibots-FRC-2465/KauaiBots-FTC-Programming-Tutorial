@@ -149,7 +149,7 @@ public class FlywheelSubsystem extends SubsystemBase {
             public void end(boolean interrupted) {
                 Log.i("FTC20311", "detected kS = " + regression.getIntercept());
                 Log.i("FTC20311", "detected kV = " + regression.getSlope());
-            };
+            }
         };
     }
 }
