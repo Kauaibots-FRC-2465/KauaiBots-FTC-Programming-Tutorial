@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
+import android.util.Log;
+
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -142,6 +144,12 @@ public class FlywheelSubsystem extends SubsystemBase {
             public boolean isFinished() {
                 return requestedVoltage > 10;
             }
+
+            @Override
+            public void end(boolean interrupted) {
+                Log.i("FTC20311", "detected kS = " + regression.getIntercept());
+                Log.i("FTC20311", "detected kV = " + regression.getSlope());
+            };
         };
     }
 }
