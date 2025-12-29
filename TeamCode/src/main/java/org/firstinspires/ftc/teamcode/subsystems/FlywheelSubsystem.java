@@ -35,6 +35,7 @@ public class FlywheelSubsystem extends SubsystemBase {
     private DoubleSupplier motorVoltageSupplier = idle; // Commands must provide their own supplier
     private double motorVoltage;
     private double kS = 0;
+    private double kV = 0;
 
     // Behavior Monitoring
     private int jamCount = 0;
@@ -117,10 +118,7 @@ public class FlywheelSubsystem extends SubsystemBase {
             public void initialize() {
                 requestedVoltage = 2d;
                 motorVoltageSupplier = () -> requestedVoltage;
-                lastRPM = 0;
-                stabilityCount = 0;
-                measurementCount = 0;
-                totalRPM = 0;
+                totalRPM = lastRPM = stabilityCount = measurementCount = 0;
                 regression.clear();
             }
 
@@ -134,8 +132,7 @@ public class FlywheelSubsystem extends SubsystemBase {
                 measurementCount++;
                 if (measurementCount < SAMPLES_TO_AVERAGE) return;
                 regression.addData(totalRPM / measurementCount, requestedVoltage);
-                stabilityCount = 0;
-                measurementCount = 0;
+                stabilityCount = measurementCount = 0;
                 totalRPM = 0;
                 requestedVoltage += 1d;
             }
@@ -147,8 +144,10 @@ public class FlywheelSubsystem extends SubsystemBase {
 
             @Override
             public void end(boolean interrupted) {
-                Log.i("FTC20311", "detected kS = " + regression.getIntercept());
-                Log.i("FTC20311", "detected kV = " + regression.getSlope());
+                kS = regression.getIntercept();
+                kV = regression.getSlope();
+                Log.i("FTC20311", "detected kS = " + kS);
+                Log.i("FTC20311", "detected kV = " + kV);
             }
         };
     }
