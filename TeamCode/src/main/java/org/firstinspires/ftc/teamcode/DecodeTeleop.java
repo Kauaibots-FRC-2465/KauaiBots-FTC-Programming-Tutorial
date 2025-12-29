@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.seattlesolvers.solverslib.command.Command;
 import com.seattlesolvers.solverslib.command.CommandOpMode;
@@ -62,8 +63,8 @@ public class DecodeTeleop extends CommandOpMode {
         driverCentricButton.whenPressed(goDriverCentric);
 
         fs = new FlywheelSubsystem(hardwareMap, controlHubVSensor, 28, 3);
-        fs.addFlywheelMotor("shooter1", false);
-        fs.addFlywheelMotor("shooter2", false);
+        fs.addFlywheelMotor("shooter1", DcMotorSimple.Direction.REVERSE);
+        fs.addFlywheelMotor("shooter2", DcMotorSimple.Direction.REVERSE);
 
         testButton.whenPressed(fs.cmdTuneKs());
         testButton2.whileHeld(fs.cmdTuneWithTelemetry(()->1500d, ()->false));

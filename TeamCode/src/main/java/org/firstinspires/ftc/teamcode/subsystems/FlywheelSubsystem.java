@@ -80,20 +80,17 @@ public class FlywheelSubsystem extends SubsystemBase {
                 " countsPerFlywheelRotation cannot be 0.");
     }
 
-    public void addFlywheelMotor(String motorName, boolean reversed) {
+    public void addFlywheelMotor(String motorName, DcMotorSimple.Direction direction) {
         try {
             DcMotorEx motor = hardwareMap.get(DcMotorEx.class, motorName);
-            motor.setDirection(
-                    reversed ? DcMotorSimple.Direction.REVERSE : DcMotorSimple.Direction.FORWARD);
+            motor.setDirection(direction);
             motor.setPower(0);
             motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            if (encoderMotor == null) {
-                encoderMotor = motor;
-            }
+            if (encoderMotor == null) encoderMotor = motor;
             flywheelMotors.add(motor);
-        } catch (Exception ignored)
-        {
-            throw new IllegalArgumentException("Failed to get motor " + motorName +".  You may" +
+        }
+        catch (Exception ignored) {
+            throw new IllegalArgumentException("Failed to get motor " + motorName + ".  You may" +
                     " need to power cycle the Robot.    (Did you verify the name you gave matches" +
                     " what you set in the robot configuration?)");
         }
