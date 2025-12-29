@@ -57,6 +57,7 @@ public class FlywheelSubsystem extends SubsystemBase {
                 " flywheelDiameterInches cannot be 0.");
         if (countsPerFlywheelRotation == 0) throw new IllegalArgumentException ("ASSERTION FAILED:"+
                 " countsPerFlywheelRotation cannot be 0.");
+        setDefaultCommand(cmdIdle());
     }
 
     public void addFlywheelMotor(String motorName, DcMotorSimple.Direction direction) {
@@ -87,7 +88,6 @@ public class FlywheelSubsystem extends SubsystemBase {
         boolean possibleJam = (motorVoltage > kS * 2d && getCurrentRPM() < JAMMED_WHEN_RPM_BELOW);
         jamCount = possibleJam ? jamCount+1 : 0;
         isJammed = jamCount >= JAMMED_WHEN_COUNT_IS;
-        setDefaultCommand(cmdIdle());
     }
 
     private double getCurrentRPM() {
