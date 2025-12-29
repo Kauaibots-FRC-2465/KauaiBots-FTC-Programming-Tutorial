@@ -8,7 +8,10 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.seattlesolvers.solverslib.command.Command;
+import com.seattlesolvers.solverslib.command.InstantCommand;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
+import com.seattlesolvers.solverslib.command.WaitCommand;
+import com.seattlesolvers.solverslib.command.WaitUntilCommand;
 import com.seattlesolvers.solverslib.controller.PIDController;
 
 import org.apache.commons.math3.stat.StatUtils;
@@ -188,22 +191,20 @@ public class FlywheelSubsystem extends SubsystemBase {
         };
     }
 
-    public Command cmdWaitLaunchStart (double rpm) {
-        return new OverrideCommand () {
-            private final double SHOT_STARTS_WHEN_RPM_DROPS = 200;
-
-            @Override
-            public boolean isFinished() {
-                return getCurrentRPM() <= rpm - SHOT_STARTS_WHEN_RPM_DROPS;
-            }
-        };
+    public Command cmdLog (String info) {
+        return new InstantCommand(()->Log.i("FTC20311", info));
     }
 
-    public Command cmdWaitLaunchEnd (double rpm) {
-        return cmdWaitLaunchStart(rpm).andThen(new OverrideCommand() {
+
+    public Command cmdWaitLaunchStart (double rpm, double triggerDelta) {
+        return new WaitUntilCommand(()->getCurrentRPM() <= rpm - triggerDelta)
+                .andThen(cmdLog("Launch started"));
+    }
+
+    public Command cmdWaitLaunchEnd (double rpm, double triggerDelta, int minimumRiseCount) {
+        return cmdWaitLaunchStart(rpm, triggerDelta).andThen(new OverrideCommand() {
             private double lastVelocity;
             private int launchVelocityRiseCount;
-            private final int LAUNCH_COMPLETE_WHEN_VELOCITY_RISE_COUNT = 5;
 
             @Override
             public void initialize() {
@@ -222,8 +223,8 @@ public class FlywheelSubsystem extends SubsystemBase {
 
             @Override
             public boolean isFinished() {
-                return launchVelocityRiseCount >= LAUNCH_COMPLETE_WHEN_VELOCITY_RISE_COUNT;
+                return launchVelocityRiseCount >= minimumRiseCount;
             }
-        });
+        }, cmdLog("Launch ended"));
     }
 }
