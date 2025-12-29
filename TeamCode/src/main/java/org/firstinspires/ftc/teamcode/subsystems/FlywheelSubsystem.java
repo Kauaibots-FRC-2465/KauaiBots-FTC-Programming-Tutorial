@@ -18,6 +18,7 @@ import com.seattlesolvers.solverslib.controller.PIDController;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.apache.commons.math3.stat.regression.SimpleRegression;
+import org.firstinspires.ftc.teamcode.OverrideCommand;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -120,14 +121,7 @@ public class FlywheelSubsystem extends SubsystemBase {
     }
 
     public Command cmdTuneKs() {
-        return new FunctionalCommand(
-                ()->{},
-                ()->{},
-                (interrupted)->{},
-                ()->false,
-                this
-        )
-        {
+        return new OverrideCommand(this) {
             private boolean finished;
             private double requestedVoltage;
             private final SimpleRegression regression = new SimpleRegression();
@@ -280,12 +274,7 @@ public class FlywheelSubsystem extends SubsystemBase {
     private final double UNJAM_VOLTAGE = 0.2d*12d;
 
     public Command cmdUnjam() {
-        return new FunctionalCommand(
-                () -> {},
-                () -> {},
-                (Boolean interrupted) -> {},
-                ()->false,
-                this) {
+        return new OverrideCommand(this) {
             ElapsedTime elapsedTime = new ElapsedTime();
 
             @Override
