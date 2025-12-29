@@ -30,6 +30,7 @@ public class FlywheelSubsystem extends SubsystemBase {
     private DoubleSupplier motorVoltageSupplier; // Commands must provide their own supplier
     private double motorVoltage;
     private double kS = 0;
+    private double kV = 0;
 
     // Behavior Monitoring
     private int jamCount = 0;
