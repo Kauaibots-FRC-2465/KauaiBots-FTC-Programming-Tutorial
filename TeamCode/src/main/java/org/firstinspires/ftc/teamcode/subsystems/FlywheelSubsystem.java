@@ -109,10 +109,15 @@ public class FlywheelSubsystem extends SubsystemBase {
         boolean possibleJam = (motorVoltage > kS * 2d && getCurrentRPM() < JAMMED_WHEN_RPM_BELOW);
         jamCounter = possibleJam ? jamCounter+1 : 0;
         isJammed = jamCounter >= JAMMED_WHEN_COUNT_IS;
+        setDefaultCommand(cmdIdle());
     }
 
     private double getCurrentRPM() {
         return encoderMotor.getVelocity() / countsPerFlywheelRotation * 60d;
+    }
+
+    public Command cmdIdle() {
+        return new InstantCommand(() -> motorVoltageSupplier = idle);
     }
 
     public Command cmdTuneKs() {
@@ -163,7 +168,6 @@ public class FlywheelSubsystem extends SubsystemBase {
 
             @Override
             public void end(boolean interrupted) {
-                motorVoltageSupplier = idle;
                 Log.i("FTC20311", "detected kS = " + regression.getIntercept());
                 Log.i("FTC20311", "detected kV = " + regression.getSlope());
             }
@@ -206,7 +210,7 @@ public class FlywheelSubsystem extends SubsystemBase {
                         lastVelocity = currentRPM;
                     }
                 },
-                (Boolean interrupted) -> motorVoltageSupplier = idle,
+                (Boolean interrupted) -> {},
                 isFinished,
                 this);
     }
@@ -276,10 +280,6 @@ public class FlywheelSubsystem extends SubsystemBase {
             public void initialize() {
                 elapsedTime.reset();
                 motorVoltageSupplier = () -> (int) elapsedTime.seconds() % 2 == 0 ? -UNJAM_VOLTAGE : UNJAM_VOLTAGE;
-            }
-            @Override
-            public void end(boolean interrupted) {
-                motorVoltageSupplier = idle;
             }
         };
     }
