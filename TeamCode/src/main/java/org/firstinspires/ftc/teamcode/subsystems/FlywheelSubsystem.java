@@ -9,7 +9,6 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
-import com.qualcomm.robotcore.util.ElapsedTime;
 import com.seattlesolvers.solverslib.command.Command;
 import com.seattlesolvers.solverslib.command.InstantCommand;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
@@ -289,26 +288,6 @@ public class FlywheelSubsystem extends SubsystemBase {
             @Override
             public boolean isFinished() {
                 return launchVelocityRiseCount >= minimumRiseCount;
-            }
-        };
-    }
-
-    public Command cmdUnjam(double power, double secondsPerReversal) {
-        return new OverrideCommand(this) {
-            ElapsedTime elapsedTime = new ElapsedTime();
-            double unjamVoltage;
-
-            @Override
-            public void initialize() {
-                elapsedTime.reset();
-                unjamVoltage = -power*12;
-                motorVoltageSupplier = () -> {
-                    if (elapsedTime.seconds() >= secondsPerReversal) {
-                        elapsedTime.reset();
-                        unjamVoltage *= -1;
-                    }
-                    return unjamVoltage;
-                };
             }
         };
     }
