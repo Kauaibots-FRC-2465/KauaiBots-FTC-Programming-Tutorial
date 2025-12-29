@@ -220,7 +220,7 @@ public class FlywheelSubsystem extends SubsystemBase {
         Log.i("FTC20311", "Panels is located at http://192.168.43.1:8001");
         return cmdSetRPM(()->rpm, () -> {
             if(stableCount<STABLE_WHEN_AT_SETPOINT_COUNT)
-                Log.i("FTC20311", "stablecount = "+stableCount); // lots eat a lot of time
+                Log.i("FTC20311", "stablecount = "+stableCount);
             panelsTelemetry.addData("flywheel/measured rpm", getMeasuredRPM());
             panelsTelemetry.addData("flywheel/requested rpm", stableRPM);
             panelsTelemetry.addData("flywheel/stabilityCount", Math.min(stableCount, STABLE_WHEN_AT_SETPOINT_COUNT));
