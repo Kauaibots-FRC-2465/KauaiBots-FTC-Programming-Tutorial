@@ -214,13 +214,13 @@ public class FlywheelSubsystem extends SubsystemBase {
         Log.i("FTC20311", "Panels is located at http://192.168.43.1:8001");
         return cmdSetRPM(()->rpm, () -> {
             if(stableCount<STABLE_WHEN_AT_SETPOINT_COUNT)
-                Log.i("FTC20311", "stablecount = "+stableCount);
-            panelsTelemetry.addData("flywheel/measured rpm", getMeasuredRPM());
-            panelsTelemetry.addData("flywheel/requested rpm", stableRPM);
-            panelsTelemetry.addData("flywheel/stabilityCount", Math.min(stableCount, STABLE_WHEN_AT_SETPOINT_COUNT));
-            panelsTelemetry.addData("flywheel/isStable", isStable);
-            panelsTelemetry.addData("flywheel/isJammed", isJammed);
-            panelsTelemetry.addData("flywheel/PID P gain", pidP);
+                Log.i("FTC20311", "stableCount = "+stableCount);
+            panelsTelemetry.addData("FlywheelSubsystem/getMeasuredRPM", getMeasuredRPM());
+            panelsTelemetry.addData("FlywheelSubsystem/stableRPM", stableRPM);
+            panelsTelemetry.addData("FlywheelSubsystem/stableCount", Math.min(stableCount, STABLE_WHEN_AT_SETPOINT_COUNT));
+            panelsTelemetry.addData("FlywheelSubsystem/isStable", isStable);
+            panelsTelemetry.addData("FlywheelSubsystem/isJammed", isJammed);
+            panelsTelemetry.addData("FlywheelSubsystem/pidP", pidP);
             panelsTelemetry.update();
             return false;
         });
@@ -238,7 +238,5 @@ public class FlywheelSubsystem extends SubsystemBase {
             pidP/=1.02;
             basicPID.setP(pidP);
         });
-
     }
-
 }
