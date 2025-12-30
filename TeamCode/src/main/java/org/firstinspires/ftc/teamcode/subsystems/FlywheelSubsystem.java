@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.seattlesolvers.solverslib.command.Command;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
+import com.seattlesolvers.solverslib.controller.PIDController;
 
 import org.apache.commons.math3.stat.StatUtils;
 import org.apache.commons.math3.stat.regression.SimpleRegression;
@@ -31,18 +32,27 @@ public class FlywheelSubsystem extends SubsystemBase {
     // motor control
     private double[] voltageHistory = {12d, 12d, 12d, 12d, 12d, 12d, 12d, 12d};
     private double batteryVoltage = 12d;
-    private final DoubleSupplier idle = () -> 0;
-    private DoubleSupplier motorVoltageSupplier = idle; // Commands must provide their own supplier
-    private double motorVoltage;
     private double kS = 0;
     private double kV = 0;
+    private double pidP = 0;
+    private PIDController basicPID = new PIDController(pidP, 0, 0);
+    private double motorVoltage;
+
+    // command inputs
+    private final DoubleSupplier stop = () -> 0;
+    private DoubleSupplier stableRPMSupplier = stop; // Commands change this to their own supplier
+    private DoubleSupplier motorVoltageSupplier = stop; // Commands change this to their own supplier
 
     // Behavior Monitoring
     private int jamCount = 0;
     private boolean isJammed = false;
     private final int JAMMED_WHEN_COUNT_IS = 50;
     private final double JAMMED_WHEN_RPM_BELOW = 60;
-    private int stabilityCount;
+    private int stableCount;
+    private boolean isStable = false;
+    private double stableRPM;
+    private double stabilityTolerance = 60;
+    private final int STABLE_WHEN_AT_SETPOINT_COUNT = 6;
 
     public FlywheelSubsystem(HardwareMap hardwareMap,
                              VoltageSensor controlHubVSensor,
@@ -56,7 +66,7 @@ public class FlywheelSubsystem extends SubsystemBase {
                 " flywheelDiameterInches cannot be 0.");
         if (countsPerFlywheelRotation == 0) throw new IllegalArgumentException ("ASSERTION FAILED:"+
                 " countsPerFlywheelRotation cannot be 0.");
-        setDefaultCommand(cmdIdle());
+        setDefaultCommand(cmdStop());
     }
 
     public void addFlywheelMotor(String motorName, DcMotorSimple.Direction direction) {
@@ -80,34 +90,49 @@ public class FlywheelSubsystem extends SubsystemBase {
         System.arraycopy(voltageHistory, 0, voltageHistory, 1, voltageHistory.length - 1);
         voltageHistory[0] = controlHubVSensor.getVoltage();
         batteryVoltage = StatUtils.mean(voltageHistory);
+        stableRPM = stableRPMSupplier.getAsDouble();
         motorVoltage = motorVoltageSupplier.getAsDouble();
         for (DcMotorEx flywheelMotor : flywheelMotors) {
             flywheelMotor.setPower(motorVoltage / batteryVoltage);
         }
-        boolean possibleJam = (motorVoltage > kS * 2d && getCurrentRPM() < JAMMED_WHEN_RPM_BELOW);
-        jamCount = possibleJam ? jamCount+1 : 0;
+        double measuredRPM = getMeasuredRPM();
+        boolean possibleJam = (motorVoltage > kS * 2d && measuredRPM < JAMMED_WHEN_RPM_BELOW);
+        boolean rpmWithinTolerance = Math.abs(measuredRPM-stableRPM) < stabilityTolerance;
+        jamCount = possibleJam ? jamCount +1 : 0;
+        stableCount = rpmWithinTolerance ? stableCount +1 : 0;
         isJammed = jamCount >= JAMMED_WHEN_COUNT_IS;
+        isStable = stableCount >= STABLE_WHEN_AT_SETPOINT_COUNT;
     }
 
-    private double getCurrentRPM() {
+    private double getMeasuredRPM() {
         if (encoderMotor == null) return 0;
         return encoderMotor.getVelocity() / countsPerFlywheelRotation * 60d;
     }
 
-    public Command cmdIdle() {
+    public boolean getIsJammed() {
+        return isJammed;
+    }
+
+    public boolean getIsStable() {
+        return isStable;
+    }
+
+    public Command cmdStop() {
         return new OverrideCommand (this){
             @Override
             public void initialize() {
-                motorVoltageSupplier = idle;
+                stableRPMSupplier = stop;
+                motorVoltageSupplier = stop;
             }
         };
     }
 
-    public Command cmdTuneMotorConstants() {
+    public Command cmdFindMotorConstants() {
         return new OverrideCommand(this) {
             private double requestedVoltage;
 
             private double lastRPM;
+            private int peakCount;
             private final int TUNING_STABILITY_REQUIREMENT = 10;
             private int measurementCount;
             private double totalRPM;
@@ -117,22 +142,25 @@ public class FlywheelSubsystem extends SubsystemBase {
             @Override
             public void initialize() {
                 requestedVoltage = 2d;
+                stableRPMSupplier = stop;
                 motorVoltageSupplier = () -> requestedVoltage;
-                totalRPM = lastRPM = stabilityCount = measurementCount = 0;
+                totalRPM = lastRPM = peakCount = measurementCount = 0;
                 regression.clear();
             }
 
             @Override
             public void execute() {
-                double currentRPM = getCurrentRPM();
-                if (currentRPM < lastRPM) stabilityCount++;
-                lastRPM = currentRPM;
-                if (stabilityCount < TUNING_STABILITY_REQUIREMENT) return;
-                totalRPM += getCurrentRPM();
+                double measuredRPM = getMeasuredRPM();
+                if (measuredRPM < lastRPM) peakCount++;
+                lastRPM = measuredRPM;
+                if (peakCount < TUNING_STABILITY_REQUIREMENT) return;
+                totalRPM += getMeasuredRPM();
                 measurementCount++;
                 if (measurementCount < SAMPLES_TO_AVERAGE) return;
                 regression.addData(totalRPM / measurementCount, requestedVoltage);
-                stabilityCount = measurementCount = 0;
+                Log.i("FTC20311", "recorded (RPM <tab> volts) = " +
+                        totalRPM / measurementCount + "\t" + requestedVoltage);
+                peakCount = measurementCount = 0;
                 totalRPM = 0;
                 requestedVoltage += 1d;
             }
@@ -144,8 +172,10 @@ public class FlywheelSubsystem extends SubsystemBase {
 
             @Override
             public void end(boolean interrupted) {
+                if (requestedVoltage <= 10) return;
                 kS = regression.getIntercept();
                 kV = regression.getSlope();
+                if (pidP==0) basicPID.setP(pidP = kV*8);
                 Log.i("FTC20311", "detected kS = " + kS);
                 Log.i("FTC20311", "detected kV = " + kV);
             }
