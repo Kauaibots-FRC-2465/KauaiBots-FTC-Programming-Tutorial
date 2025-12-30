@@ -26,17 +26,25 @@ public class FlywheelSubsystem extends SubsystemBase {
     // motor control
     private double[] voltageHistory = {12d, 12d, 12d, 12d, 12d, 12d, 12d, 12d};
     private double batteryVoltage = 12d;
-    private final DoubleSupplier idle = () -> 0;
-    private DoubleSupplier motorVoltageSupplier = idle; // Commands must provide their own supplier
-    private double motorVoltage;
     private double kS = 0;
     private double kV = 0;
+    private double motorVoltage;
+
+    // command inputs
+    private final DoubleSupplier stop = () -> 0;
+    private DoubleSupplier stableRPMSupplier = stop; // Commands change this to their own supplier
+    private DoubleSupplier motorVoltageSupplier = stop; // Commands change this to their own supplier
 
     // Behavior Monitoring
     private int jamCount = 0;
     private boolean isJammed = false;
     private final int JAMMED_WHEN_COUNT_IS = 50;
     private final double JAMMED_WHEN_RPM_BELOW = 60;
+    private int stableCount;
+    private boolean isStable = false;
+    private double stableRPM;
+    private double stabilityTolerance = 60;
+    private final int STABLE_WHEN_AT_SETPOINT_COUNT = 6;
 
     public FlywheelSubsystem(HardwareMap hardwareMap,
                              VoltageSensor controlHubVSensor,
@@ -50,7 +58,7 @@ public class FlywheelSubsystem extends SubsystemBase {
                 " flywheelDiameterInches cannot be 0.");
         if (countsPerFlywheelRotation == 0) throw new IllegalArgumentException ("ASSERTION FAILED:"+
                 " countsPerFlywheelRotation cannot be 0.");
-        setDefaultCommand(cmdIdle());
+        setDefaultCommand(cmdStop());
     }
 
     public void addFlywheelMotor(String motorName, DcMotorSimple.Direction direction) {
@@ -74,17 +82,30 @@ public class FlywheelSubsystem extends SubsystemBase {
         System.arraycopy(voltageHistory, 0, voltageHistory, 1, voltageHistory.length - 1);
         voltageHistory[0] = controlHubVSensor.getVoltage();
         batteryVoltage = StatUtils.mean(voltageHistory);
+        stableRPM = stableRPMSupplier.getAsDouble();
         motorVoltage = motorVoltageSupplier.getAsDouble();
         for (DcMotorEx flywheelMotor : flywheelMotors) {
             flywheelMotor.setPower(motorVoltage / batteryVoltage);
         }
-        boolean possibleJam = (motorVoltage > kS * 2d && getCurrentRPM() < JAMMED_WHEN_RPM_BELOW);
-        jamCount = possibleJam ? jamCount+1 : 0;
+        double measuredRPM = getMeasuredRPM();
+        boolean possibleJam = (motorVoltage > kS * 2d && measuredRPM < JAMMED_WHEN_RPM_BELOW);
+        boolean rpmWithinTolerance = Math.abs(measuredRPM-stableRPM) < stabilityTolerance;
+        jamCount = possibleJam ? jamCount +1 : 0;
+        stableCount = rpmWithinTolerance ? stableCount +1 : 0;
         isJammed = jamCount >= JAMMED_WHEN_COUNT_IS;
+        isStable = stableCount >= STABLE_WHEN_AT_SETPOINT_COUNT;
     }
 
-    private double getCurrentRPM() {
+    private double getMeasuredRPM() {
         if (encoderMotor == null) return 0;
         return encoderMotor.getVelocity() / countsPerFlywheelRotation * 60d;
+    }
+
+    public boolean getIsJammed() {
+        return isJammed;
+    }
+
+    public boolean getIsStable() {
+        return isStable;
     }
 }

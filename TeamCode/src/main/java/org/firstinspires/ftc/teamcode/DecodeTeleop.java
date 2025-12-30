@@ -15,15 +15,16 @@ import java.util.function.Supplier;
 @TeleOp(name = "2025 Decode TeleOp", group = "20311")
 public class DecodeTeleop extends CommandOpMode {
     private PedroPathingSubsystem pps;
-    private GamepadEx driverGamepad;
+    private GamepadEx driverGamepad, engineerGamepad;
     private GamepadButton reorientButton, driverCentricButton;
 
     @Override
     public void initialize() {
         pps = new PedroPathingSubsystem(hardwareMap, new Pose(0+17.2/2, 24, 0));
         driverGamepad = new GamepadEx(gamepad1);
-        reorientButton = new GamepadButton(driverGamepad, GamepadKeys.Button.Y);
-        driverCentricButton = new GamepadButton(driverGamepad, GamepadKeys.Button.B);
+        engineerGamepad = new GamepadEx(gamepad2);
+        reorientButton = new GamepadButton(driverGamepad, GamepadKeys.Button.TRIANGLE); // aka Y
+        driverCentricButton = new GamepadButton(driverGamepad, GamepadKeys.Button.CIRCLE); // aka B
         Supplier<Float> fwdSupplier = () -> -gamepad1.left_stick_y;
         Supplier<Float> strafeSupplier = () -> -gamepad1.left_stick_x;
         Supplier<Float> turnSupplier = () -> -gamepad1.right_stick_x;
