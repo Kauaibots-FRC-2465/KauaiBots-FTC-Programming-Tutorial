@@ -44,26 +44,25 @@ public class DecodeTuning extends CommandOpMode {
         tuneButton = new GamepadButton(driverGamepad, GamepadKeys.Button.SQUARE); // aka X
         increasePButton = new GamepadButton(driverGamepad, GamepadKeys.Button.DPAD_UP);
         decreasePButton = new GamepadButton(driverGamepad, GamepadKeys.Button.DPAD_DOWN);
-        testLaunchDetectionButton = new GamepadButton(driverGamepad, GamepadKeys.Button.LEFT_BUMPER); // aka B
+        testLaunchDetectionButton = new GamepadButton(driverGamepad, GamepadKeys.Button.LEFT_BUMPER);
         findMotorConstantsButton.whenPressed(fs.cmdFindMotorConstants());
         stopButton.whenPressed(fs.cmdStop());
         tuneButton.whenHeld(fs.cmdTuneWithTelemetry(1500d));
         increasePButton.whenPressed(fs.cmdIncreaseP());
         decreasePButton.whenPressed(fs.cmdDecreaseP());
-        testLaunchDetectionButton.whenPressed(
-            fs.cmdSetRPM(()->1500, ()->false).raceWith(
-                new WaitCommand(50).andThen(
-                fs.cmdWaitUntilStable(),
-                cmdLog("Stable "+System.nanoTime()),
-                fs.cmdWaitLaunchStart(1500, 200),
-                cmdLog("Launch started at "+System.nanoTime()),
-                fs.cmdWaitLaunchEnd(5),
-                cmdLog("Launch ended at "+System.nanoTime()))
-            ));
+        Command launch = fs.cmdSetRPM(()->1500, ()->false);
+        Command detectLaunch =
+            new WaitCommand(50).andThen(
+            fs.cmdWaitUntilStable(),
+            cmdLog("Stable "+System.nanoTime()),
+            fs.cmdWaitLaunchStart(1500, 200),
+            cmdLog("Launch started at "+System.nanoTime()),
+            fs.cmdWaitLaunchEnd(5),
+            cmdLog("Launch ended at "+System.nanoTime()));
+        testLaunchDetectionButton.whenPressed(launch.raceWith(detectLaunch));
     }
 
     public Command cmdLog (String info) {
         return new InstantCommand(()-> Log.i("FTC20311", info));
     }
-
 }
