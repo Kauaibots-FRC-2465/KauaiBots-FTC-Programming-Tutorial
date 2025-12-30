@@ -153,8 +153,8 @@ public class FlywheelSubsystem extends SubsystemBase {
                 if (measuredRPM < lastRPM) peakCount++;
                 lastRPM = measuredRPM;
                 if (peakCount < TUNING_STABILITY_REQUIREMENT) return;
-                totalRPM += getMeasuredRPM();
-                measurementCount++;0
+                totalRPM += measuredRPM;
+                measurementCount++;
                 if (measurementCount < SAMPLES_TO_AVERAGE) return;
                 regression.addData(totalRPM / measurementCount, requestedVoltage);
                 Log.i("FTC20311", "recorded (RPM <tab> volts) = " +
@@ -170,7 +170,7 @@ public class FlywheelSubsystem extends SubsystemBase {
 
             @Override
             public void end(boolean interrupted) {
-                if (requestedVoltage <= 10d) return;
+                if (interrupted) return;
                 Log.i("FTC20311", "detected kS = " + regression.getIntercept());
                 Log.i("FTC20311", "detected kV = " + regression.getSlope());
                 if (kS == 0) kS = regression.getIntercept();
