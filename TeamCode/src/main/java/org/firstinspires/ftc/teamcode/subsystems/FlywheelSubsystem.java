@@ -130,7 +130,6 @@ public class FlywheelSubsystem extends SubsystemBase {
     public Command cmdFindMotorConstants() {
         return new OverrideCommand(this) {
             private double requestedVoltage;
-
             private double lastRPM;
             private int peakCount;
             private final int TUNING_STABILITY_REQUIREMENT = 10;
@@ -155,13 +154,12 @@ public class FlywheelSubsystem extends SubsystemBase {
                 lastRPM = measuredRPM;
                 if (peakCount < TUNING_STABILITY_REQUIREMENT) return;
                 totalRPM += getMeasuredRPM();
-                measurementCount++;
+                measurementCount++;0
                 if (measurementCount < SAMPLES_TO_AVERAGE) return;
                 regression.addData(totalRPM / measurementCount, requestedVoltage);
                 Log.i("FTC20311", "recorded (RPM <tab> volts) = " +
                         totalRPM / measurementCount + "\t" + requestedVoltage);
-                peakCount = measurementCount = 0;
-                totalRPM = 0;
+                totalRPM = peakCount = measurementCount = 0;
                 requestedVoltage += 1d;
             }
 
@@ -172,12 +170,12 @@ public class FlywheelSubsystem extends SubsystemBase {
 
             @Override
             public void end(boolean interrupted) {
-                if (requestedVoltage <= 10) return;
-                kS = regression.getIntercept();
-                kV = regression.getSlope();
+                if (requestedVoltage <= 10d) return;
+                Log.i("FTC20311", "detected kS = " + regression.getIntercept());
+                Log.i("FTC20311", "detected kV = " + regression.getSlope());
+                if (kS == 0) kS = regression.getIntercept();
+                if (kV == 0) kV = regression.getSlope();
                 if (pidP==0) basicPID.setP(pidP = kV*8);
-                Log.i("FTC20311", "detected kS = " + kS);
-                Log.i("FTC20311", "detected kV = " + kV);
             }
         };
     }
