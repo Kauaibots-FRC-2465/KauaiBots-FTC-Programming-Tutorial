@@ -1,13 +1,9 @@
 package org.firstinspires.ftc.teamcode;
 
-import android.util.Log;
-
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.seattlesolvers.solverslib.command.Command;
 import com.seattlesolvers.solverslib.command.CommandOpMode;
-import com.seattlesolvers.solverslib.command.InstantCommand;
-import com.seattlesolvers.solverslib.command.WaitCommand;
 import com.seattlesolvers.solverslib.command.button.GamepadButton;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
@@ -49,7 +45,7 @@ public class DecodeTeleop extends CommandOpMode {
         Supplier<Float> turnSupplier = () -> -gamepad1.right_stick_x;
         Command goFieldOriented = pps.cmdGoFieldOriented(fwdSupplier, strafeSupplier, turnSupplier, true);
         Command goDriverCentric = pps.cmdGoDriverCentric(fwdSupplier, strafeSupplier, turnSupplier, true);
-        Command reorient=pps.cmdSetFieldForwardDirection();
+        Command reorient = pps.cmdSetFieldForwardDirection();
         Command driverPlaysRed = pps.cmdSetDriverPose(new Pose(  0-12, 24));
         Command driverPlaysBlue = pps.cmdSetDriverPose(new Pose(144+12, 24));
 
@@ -59,8 +55,5 @@ public class DecodeTeleop extends CommandOpMode {
 
         reorientButton.whenPressed(reorient).whenPressed(goFieldOriented);
         driverCentricButton.whenPressed(goDriverCentric);
-    }
-    public Command cmdLog (String info) {
-        return new InstantCommand(()-> Log.i("FTC20311", info));
     }
 }
