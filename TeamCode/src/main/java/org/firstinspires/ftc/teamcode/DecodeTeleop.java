@@ -22,7 +22,7 @@ public class DecodeTeleop extends CommandOpMode {
         pps = new PedroPathingSubsystem(hardwareMap);
         driverGamepad = new GamepadEx(gamepad1);
         engineerGamepad = new GamepadEx(gamepad2);
-        reorientButton = new GamepadButton(driverGamepad, GamepadKeys.Button.Y);
+        reorientButton = new GamepadButton(driverGamepad, GamepadKeys.Button.TRIANGLE); // aka Y
         Supplier<Float> fwdSupplier = () -> -gamepad1.left_stick_y;
         Supplier<Float> strafeSupplier = () -> -gamepad1.left_stick_x;
         Supplier<Float> turnSupplier = () -> -gamepad1.right_stick_x;
