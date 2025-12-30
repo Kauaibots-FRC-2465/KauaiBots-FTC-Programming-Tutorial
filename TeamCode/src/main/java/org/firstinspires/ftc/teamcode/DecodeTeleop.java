@@ -45,7 +45,7 @@ public class DecodeTeleop extends CommandOpMode {
         Supplier<Float> turnSupplier = () -> -gamepad1.right_stick_x;
         Command goFieldOriented = pps.cmdGoFieldOriented(fwdSupplier, strafeSupplier, turnSupplier, true);
         Command goDriverCentric = pps.cmdGoDriverCentric(fwdSupplier, strafeSupplier, turnSupplier, true);
-        Command reorient=pps.cmdSetFieldForwardDirection();
+        Command reorient = pps.cmdSetFieldForwardDirection();
         Command driverPlaysRed = pps.cmdSetDriverPose(new Pose(  0-12, 24));
         Command driverPlaysBlue = pps.cmdSetDriverPose(new Pose(144+12, 24));
 
