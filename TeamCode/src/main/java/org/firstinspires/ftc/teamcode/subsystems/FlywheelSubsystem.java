@@ -37,16 +37,16 @@ public class FlywheelSubsystem extends SubsystemBase {
     private DoubleSupplier stableRPMSupplier = stop; // Commands change this to their own supplier
     private DoubleSupplier motorVoltageSupplier = stop; // Commands change this to their own supplier
 
-    // Behavior Monitoring
+    // behavior monitoring
+    private double stableRPM;
     private int jamCount = 0;
     private boolean isJammed = false;
     private final int JAMMED_WHEN_COUNT_IS = 50;
     private final double JAMMED_WHEN_RPM_BELOW = 60;
-    private int stableCount;
+    private int stableCount = 0;
     private boolean isStable = false;
-    private double stableRPM;
-    private double stabilityTolerance = 60;
     private final int STABLE_WHEN_AT_SETPOINT_COUNT = 6;
+    private double stabilityTolerance = 60;
 
     public FlywheelSubsystem(HardwareMap hardwareMap,
                              VoltageSensor controlHubVSensor,
@@ -92,7 +92,7 @@ public class FlywheelSubsystem extends SubsystemBase {
         double measuredRPM = getMeasuredRPM();
         boolean possibleJam = (motorVoltage > kS * 2d && measuredRPM < JAMMED_WHEN_RPM_BELOW);
         boolean rpmWithinTolerance = Math.abs(measuredRPM-stableRPM) < stabilityTolerance;
-        jamCount = possibleJam ? jamCount +1 : 0;
+        jamCount = possibleJam ? jamCount+1 : 0;
         stableCount = rpmWithinTolerance ? stableCount +1 : 0;
         isJammed = jamCount >= JAMMED_WHEN_COUNT_IS;
         isStable = stableCount >= STABLE_WHEN_AT_SETPOINT_COUNT;
