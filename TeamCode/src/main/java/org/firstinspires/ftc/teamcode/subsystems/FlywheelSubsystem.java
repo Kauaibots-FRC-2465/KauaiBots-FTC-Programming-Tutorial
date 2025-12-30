@@ -58,6 +58,9 @@ public class FlywheelSubsystem extends SubsystemBase {
     private final int STABLE_WHEN_AT_SETPOINT_COUNT = 6;
     private double stabilityTolerance = 60;
 
+    // Telemetry
+    private TelemetryManager panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
+
     public FlywheelSubsystem(HardwareMap hardwareMap,
                              VoltageSensor controlHubVSensor,
                              double countsPerFlywheelRotation,
