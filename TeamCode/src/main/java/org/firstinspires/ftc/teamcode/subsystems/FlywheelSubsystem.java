@@ -38,7 +38,7 @@ public class FlywheelSubsystem extends SubsystemBase {
     private double batteryVoltage = 12d;
     private double kS = 0.48;
     private double kV = 0.00252;
-    private double pidP = 0.02;
+    private double pidP = 0;
     private PIDController basicPID = new PIDController(pidP, 0, 0);
     private double motorVoltage;
 
