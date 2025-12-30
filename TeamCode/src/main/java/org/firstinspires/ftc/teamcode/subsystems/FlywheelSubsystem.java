@@ -196,9 +196,10 @@ public class FlywheelSubsystem extends SubsystemBase {
             public void initialize() {
                 stableRPMSupplier = () -> rpm.getAsDouble();
                 motorVoltageSupplier = () -> {
-                    basicPID.setSetPoint(rpm.getAsDouble());
+                    double requesedRpm = rpm.getAsDouble();
+                    basicPID.setSetPoint(requesedRpm);
                     double correction = basicPID.calculate(getMeasuredRPM());
-                    return correction + kS + kV * rpm.getAsDouble();
+                    return correction + kS + kV * requesedRpm;
                 };
             }
 
