@@ -60,6 +60,17 @@ public class DecodeTuning extends CommandOpMode {
             fs.cmdWaitLaunchEnd(5),
             cmdLog("Launch ended at "+System.nanoTime()));
         testLaunchDetectionButton.whenPressed(launch.raceWith(detectLaunch));
+        testLaunchDetectionButton.whenPressed(
+                fs.cmdSetRPM(()->1500, ()->false)
+                    .raceWith(
+                new WaitCommand(50).andThen(
+                            fs.cmdWaitUntilStable(),
+                            cmdLog("Stable "+System.nanoTime()),
+                            fs.cmdWaitLaunchStart(1500, 200),
+                            cmdLog("Launch started at "+System.nanoTime()),
+                            fs.cmdWaitLaunchEnd(5),
+                            cmdLog("Launch ended at "+System.nanoTime()))));
+
     }
 
     public Command cmdLog (String info) {
