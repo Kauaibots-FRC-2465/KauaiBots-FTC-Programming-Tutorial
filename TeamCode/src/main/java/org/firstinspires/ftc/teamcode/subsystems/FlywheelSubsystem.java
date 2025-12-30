@@ -12,7 +12,6 @@ import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.seattlesolvers.solverslib.command.Command;
 import com.seattlesolvers.solverslib.command.InstantCommand;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
-import com.seattlesolvers.solverslib.command.WaitUntilCommand;
 import com.seattlesolvers.solverslib.controller.PIDController;
 
 import org.apache.commons.math3.stat.StatUtils;
@@ -39,7 +38,7 @@ public class FlywheelSubsystem extends SubsystemBase {
     private double batteryVoltage = 12d;
     private double kS = 0.48;
     private double kV = 0.00252;
-    private double pidP = kV*8;
+    private double pidP = 0;
     private PIDController basicPID = new PIDController(pidP, 0, 0);
     private double motorVoltage;
 
@@ -48,16 +47,16 @@ public class FlywheelSubsystem extends SubsystemBase {
     private DoubleSupplier stableRPMSupplier = stop; // Commands change this to their own supplier
     private DoubleSupplier motorVoltageSupplier = stop; // Commands change this to their own supplier
 
-    // Behavior Monitoring
-    private int jammedCount = 0;
+    // behavior monitoring
+    private double stableRPM;
+    private int jamCount = 0;
     private boolean isJammed = false;
     private final int JAMMED_WHEN_COUNT_IS = 50;
     private final double JAMMED_WHEN_RPM_BELOW = 60;
-    private int stableCount;
+    private int stableCount = 0;
     private boolean isStable = false;
-    private double stableRPM;
-    private double stabilityTolerance = 60;
     private final int STABLE_WHEN_AT_SETPOINT_COUNT = 6;
+    private double stabilityTolerance = 60;
 
     // Telemetry
     private TelemetryManager panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
@@ -106,9 +105,9 @@ public class FlywheelSubsystem extends SubsystemBase {
         double measuredRPM = getMeasuredRPM();
         boolean possibleJam = (motorVoltage > kS * 2d && measuredRPM < JAMMED_WHEN_RPM_BELOW);
         boolean rpmWithinTolerance = Math.abs(measuredRPM-stableRPM) < stabilityTolerance;
-        jammedCount = possibleJam ? jammedCount +1 : 0;
+        jamCount = possibleJam ? jamCount+1 : 0;
         stableCount = rpmWithinTolerance ? stableCount +1 : 0;
-        isJammed = jammedCount >= JAMMED_WHEN_COUNT_IS;
+        isJammed = jamCount >= JAMMED_WHEN_COUNT_IS;
         isStable = stableCount >= STABLE_WHEN_AT_SETPOINT_COUNT;
     }
 
@@ -138,7 +137,6 @@ public class FlywheelSubsystem extends SubsystemBase {
     public Command cmdFindMotorConstants() {
         return new OverrideCommand(this) {
             private double requestedVoltage;
-
             private double lastRPM;
             private int peakCount;
             private final int TUNING_STABILITY_REQUIREMENT = 10;
@@ -162,14 +160,13 @@ public class FlywheelSubsystem extends SubsystemBase {
                 if (measuredRPM < lastRPM) peakCount++;
                 lastRPM = measuredRPM;
                 if (peakCount < TUNING_STABILITY_REQUIREMENT) return;
-                totalRPM += getMeasuredRPM();
+                totalRPM += measuredRPM;
                 measurementCount++;
                 if (measurementCount < SAMPLES_TO_AVERAGE) return;
                 regression.addData(totalRPM / measurementCount, requestedVoltage);
                 Log.i("FTC20311", "recorded (RPM <tab> volts) = " +
                         totalRPM / measurementCount + "\t" + requestedVoltage);
-                peakCount = measurementCount = 0;
-                totalRPM = 0;
+                totalRPM = peakCount = measurementCount = 0;
                 requestedVoltage += 1d;
             }
 
@@ -180,12 +177,12 @@ public class FlywheelSubsystem extends SubsystemBase {
 
             @Override
             public void end(boolean interrupted) {
-                if (requestedVoltage <= 10) return;
-                kS = regression.getIntercept();
-                kV = regression.getSlope();
+                if (interrupted) return;
+                Log.i("FTC20311", "detected kS = " + regression.getIntercept());
+                Log.i("FTC20311", "detected kV = " + regression.getSlope());
+                if (kS == 0) kS = regression.getIntercept();
+                if (kV == 0) kV = regression.getSlope();
                 if (pidP==0) basicPID.setP(pidP = kV*8);
-                Log.i("FTC20311", "detected kS = " + kS);
-                Log.i("FTC20311", "detected kV = " + kV);
             }
         };
     }
@@ -196,10 +193,9 @@ public class FlywheelSubsystem extends SubsystemBase {
             public void initialize() {
                 stableRPMSupplier = () -> rpm.getAsDouble();
                 motorVoltageSupplier = () -> {
-                    double requesedRpm = rpm.getAsDouble();
-                    basicPID.setSetPoint(requesedRpm);
+                    basicPID.setSetPoint(rpm.getAsDouble());
                     double correction = basicPID.calculate(getMeasuredRPM());
-                    return correction + kS + kV * requesedRpm;
+                    return correction + kS + kV * rpm.getAsDouble();
                 };
             }
 
@@ -210,23 +206,21 @@ public class FlywheelSubsystem extends SubsystemBase {
         };
     }
 
-
     public Command cmdSetIPS(DoubleSupplier ips, BooleanSupplier isFinished) {
         return cmdSetRPM(() -> ips.getAsDouble() / Math.PI / flywheelDiameterInches * 60d, isFinished);
     }
-
 
     public Command cmdTuneWithTelemetry(double rpm) {
         Log.i("FTC20311", "Panels is located at http://192.168.43.1:8001");
         return cmdSetRPM(()->rpm, () -> {
             if(stableCount<STABLE_WHEN_AT_SETPOINT_COUNT)
-                Log.i("FTC20311", "stablecount = "+stableCount);
-            panelsTelemetry.addData("flywheel/measured rpm", getMeasuredRPM());
-            panelsTelemetry.addData("flywheel/requested rpm", stableRPM);
-            panelsTelemetry.addData("flywheel/stabilityCount", Math.min(stableCount, STABLE_WHEN_AT_SETPOINT_COUNT));
-            panelsTelemetry.addData("flywheel/isStable", isStable);
-            panelsTelemetry.addData("flywheel/isJammed", isJammed);
-            panelsTelemetry.addData("flywheel/PID P gain", pidP);
+                Log.i("FTC20311", "stableCount = "+stableCount);
+            panelsTelemetry.addData("FlywheelSubsystem/getMeasuredRPM", getMeasuredRPM());
+            panelsTelemetry.addData("FlywheelSubsystem/stableRPM", stableRPM);
+            panelsTelemetry.addData("FlywheelSubsystem/stableCount", Math.min(stableCount, STABLE_WHEN_AT_SETPOINT_COUNT));
+            panelsTelemetry.addData("FlywheelSubsystem/isStable", isStable);
+            panelsTelemetry.addData("FlywheelSubsystem/isJammed", isJammed);
+            panelsTelemetry.addData("FlywheelSubsystem/pidP", pidP);
             panelsTelemetry.update();
             return false;
         });
@@ -244,7 +238,5 @@ public class FlywheelSubsystem extends SubsystemBase {
             pidP/=1.02;
             basicPID.setP(pidP);
         });
-
     }
-
 }

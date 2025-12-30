@@ -15,12 +15,8 @@ public class DecodeTuning extends CommandOpMode {
     private FlywheelSubsystem fs;
     private VoltageSensor controlHubVSensor = null;
     private GamepadEx driverGamepad;
-    private GamepadButton
-            findMotorConstantsButton,
-            idleButton,
-            tuneButton,
-            increasePButton,
-            decreasePButton;
+    private GamepadButton findMotorConstantsButton;
+    private GamepadButton stopButton;
     @Override
     public void initialize() {
         try {
@@ -35,14 +31,8 @@ public class DecodeTuning extends CommandOpMode {
         fs.addFlywheelMotor("shooter2", DcMotorSimple.Direction.REVERSE);
         driverGamepad = new GamepadEx(gamepad1);
         findMotorConstantsButton = new GamepadButton(driverGamepad, GamepadKeys.Button.CROSS); // aka A;
-        idleButton = new GamepadButton(driverGamepad, GamepadKeys.Button.CIRCLE); // aka B
-        tuneButton = new GamepadButton(driverGamepad, GamepadKeys.Button.SQUARE); // aka X
-        increasePButton = new GamepadButton(driverGamepad, GamepadKeys.Button.DPAD_UP);
-        decreasePButton = new GamepadButton(driverGamepad, GamepadKeys.Button.DPAD_DOWN);
+        stopButton = new GamepadButton(driverGamepad, GamepadKeys.Button.CIRCLE); // aka B
         findMotorConstantsButton.whenPressed(fs.cmdFindMotorConstants());
-        idleButton.whenPressed(fs.cmdStop());
-        tuneButton.whenHeld(fs.cmdTuneWithTelemetry(1500d));
-        increasePButton.whenPressed(fs.cmdIncreaseP());
-        decreasePButton.whenPressed(fs.cmdDecreaseP());
+        stopButton.whenPressed(fs.cmdStop());
     }
 }
