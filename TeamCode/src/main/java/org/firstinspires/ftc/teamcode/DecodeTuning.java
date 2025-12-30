@@ -17,6 +17,9 @@ public class DecodeTuning extends CommandOpMode {
     private GamepadEx driverGamepad;
     private GamepadButton findMotorConstantsButton;
     private GamepadButton stopButton;
+    private GamepadButton tuneButton;
+    private GamepadButton increasePButton;
+    private GamepadButton decreasePButton;
     @Override
     public void initialize() {
         try {
@@ -32,7 +35,13 @@ public class DecodeTuning extends CommandOpMode {
         driverGamepad = new GamepadEx(gamepad1);
         findMotorConstantsButton = new GamepadButton(driverGamepad, GamepadKeys.Button.CROSS); // aka A;
         stopButton = new GamepadButton(driverGamepad, GamepadKeys.Button.CIRCLE); // aka B
+        tuneButton = new GamepadButton(driverGamepad, GamepadKeys.Button.SQUARE); // aka X
+        increasePButton = new GamepadButton(driverGamepad, GamepadKeys.Button.DPAD_UP);
+        decreasePButton = new GamepadButton(driverGamepad, GamepadKeys.Button.DPAD_DOWN);
         findMotorConstantsButton.whenPressed(fs.cmdFindMotorConstants());
         stopButton.whenPressed(fs.cmdStop());
+        tuneButton.whenHeld(fs.cmdTuneWithTelemetry(1500d));
+        increasePButton.whenPressed(fs.cmdIncreaseP());
+        decreasePButton.whenPressed(fs.cmdDecreaseP());
     }
 }
