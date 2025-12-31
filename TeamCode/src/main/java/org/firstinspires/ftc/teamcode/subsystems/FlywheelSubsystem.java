@@ -290,15 +290,16 @@ public class FlywheelSubsystem extends SubsystemBase {
         };
     }
 
-    public Command cmdUnjam(double power, double secondsPerReversal) {
+        public Command cmdUnjam(double power, double secondsPerReversal) {
         return new OverrideCommand(this) {
-            ElapsedTime elapsedTime = new ElapsedTime();
-            double unjamVoltage;
+            private ElapsedTime elapsedTime = new ElapsedTime();
+            private double unjamVoltage;
 
             @Override
             public void initialize() {
                 elapsedTime.reset();
                 unjamVoltage = -power*12;
+                stableRPMSupplier = stop;
                 motorVoltageSupplier = () -> {
                     if (elapsedTime.seconds() >= secondsPerReversal) {
                         elapsedTime.reset();
