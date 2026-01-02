@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
+import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_TO_POSITION;
+import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_USING_ENCODER;
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.STOP_AND_RESET_ENCODER;
 import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE;
 
@@ -75,5 +77,29 @@ public class GenericMotorSubsystem extends SubsystemBase {
         lastZPB = defaultZPB;
         motor.setMode(STOP_AND_RESET_ENCODER);
         lastRunMode = STOP_AND_RESET_ENCODER;
+    }
+
+    private void setDefaultZeroPowerBehavior(DcMotor.ZeroPowerBehavior defaultZeroPowerBehavior) {
+        this.defaultZPB = defaultZeroPowerBehavior;
+    }
+
+    private void setZeroPowerBehavior(DcMotor.ZeroPowerBehavior zeroPowerBehavior) {
+        if (lastZPB == zeroPowerBehavior) return;
+        motor.setZeroPowerBehavior(zeroPowerBehavior);
+        lastZPB = zeroPowerBehavior;
+    }
+
+    private void restoreZeroPowerBehavior() {
+        setZeroPowerBehavior(defaultZPB);
+    }
+
+    private void setMotorCoefficients(double positionP, double positionPower, double velocityP, double velocityF) {
+        this.positionP = positionP;
+        this.positionPower = positionPower;
+        this.velocityP = velocityP;
+        this.velocityF = velocityF;
+        if(lastRunMode == RUN_TO_POSITION) motor.setPower(positionPower);
+        motor.setPositionPIDFCoefficients(positionP);
+        motor.setVelocityPIDFCoefficients(lastRunMode ==RUN_USING_ENCODER?velocityP:0, 0, 0, velocityF);
     }
 }
