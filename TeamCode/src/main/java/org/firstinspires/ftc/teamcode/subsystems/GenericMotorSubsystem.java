@@ -37,20 +37,26 @@ public class GenericMotorSubsystem extends SubsystemBase {
 
     private double countsPerRotation;
     private final DcMotorEx motor;
+
     // Default values
     private double positionP = 10d;
     private double positionPower = 1d;
     private double velocityP = 0d;
     private double velocityF = 0d;
     private DcMotor.ZeroPowerBehavior defaultZPB = BRAKE;
+
     // RunMode cache
     private DcMotor.RunMode lastRunMode;
-    // RUN_USING_ENCODER cache
-    private final DcMotorExCache lastRUEcps  = new DcMotorExCache(20d);
-    // RUN_WITHOUT_ENCODER cache
+
+    // RUN_USING_ENCODER cache - hardware quantizes to 20 ticks/sec
+    private final DcMotorExCache lastRUEcps = new DcMotorExCache(20d);
+
+    // RUN_WITHOUT_ENCODER cache - hardware uses a 16-bit signed integer (32767 steps)
     private final DcMotorExCache lastRWEpower = new DcMotorExCache(1d/32767d);
-    // RUN_TO_POSITION cache
+
+    // RUN_TO_POSITION cache - hardware quantizes to individual encoder ticks
     private final DcMotorExCache lastRTPcounts = new DcMotorExCache(1d);
+
     // ZeroPowerBehavior cache
     private DcMotor.ZeroPowerBehavior lastZPB;
 
