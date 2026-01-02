@@ -9,7 +9,7 @@ public class GenericMotorSubsystem extends SubsystemBase {
         private final double quantization;
         private boolean isValid=false;
 
-        DcMotorExCache(double quantization) { this.quantization = quantization; }
+        private DcMotorExCache(double quantization) { this.quantization = quantization; }
 
         void invalidate() { isValid = false; }
 
