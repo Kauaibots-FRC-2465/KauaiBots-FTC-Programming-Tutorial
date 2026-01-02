@@ -27,17 +27,17 @@ import org.firstinspires.ftc.teamcode.OverrideCommand;
 import java.util.function.DoubleSupplier;
 
 public class GenericMotorSubsystem extends SubsystemBase {
-    private class DcMotorExCache {
+    private class Cache {
         private double lastValue;
         private int lastValueInSteps;
         private final double quantization;
         private boolean isValid=false;
 
-        DcMotorExCache(double quantization) { this.quantization = quantization; }
+        Cache(double quantization) { this.quantization = quantization; }
 
         void invalidate() { isValid = false; }
 
-        boolean hasChanged(double newValue)
+        boolean cacheAndGate(double newValue)
         {
             int valueInSteps = (int) Math.round(newValue/quantization);
             if (lastValueInSteps == valueInSteps && isValid) return false;
@@ -49,7 +49,7 @@ public class GenericMotorSubsystem extends SubsystemBase {
 
         int getAsInt() { return lastValueInSteps; }
 
-        double getRotations() { return lastValueInSteps/countsPerRotation; }
+        double getRotations() { return lastValue/countsPerRotation; }
 
         double get() { return lastValue; }
     }
@@ -65,11 +65,11 @@ public class GenericMotorSubsystem extends SubsystemBase {
     // RunMode cache
     private DcMotor.RunMode lastRunMode;
     // RUN_USING_ENCODER cache
-    private final DcMotorExCache lastRUEcps  = new DcMotorExCache(20d);
+    private final Cache lastRUEcps  = new Cache(20d);
     // RUN_WITHOUT_ENCODER cache
-    private final DcMotorExCache lastRWEpower = new DcMotorExCache(1d/32767d);
+    private final Cache lastRWEpower = new Cache(1d/32767d);
     // RUN_TO_POSITION cache
-    private final DcMotorExCache lastRTPcounts = new DcMotorExCache(1d);
+    private final Cache lastRTPcounts = new Cache(1d);
     // ZeroPowerBehavior cache
     private DcMotor.ZeroPowerBehavior lastZPB;
 
@@ -115,7 +115,7 @@ public class GenericMotorSubsystem extends SubsystemBase {
     }
 
     private void setPower(double power) {
-        if (lastRWEpower.hasChanged(power)) motor.setPower(power);
+        if (lastRWEpower.cacheAndGate(power)) motor.setPower(power);
     }
 
     private void goRWE() {
@@ -140,7 +140,7 @@ public class GenericMotorSubsystem extends SubsystemBase {
     private void goRTP(double rotations) {
         restoreZeroPowerBehavior();
         if (lastRunMode == RUN_TO_POSITION) return;
-        lastRTPcounts.hasChanged(rotations * countsPerRotation);
+        lastRTPcounts.cacheAndGate(rotations * countsPerRotation);
         motor.setTargetPosition(lastRTPcounts.getAsInt());
         motor.setMode(RUN_TO_POSITION);
         lastRunMode = RUN_TO_POSITION;
@@ -159,13 +159,13 @@ public class GenericMotorSubsystem extends SubsystemBase {
     }
 
     private void setRPM(double rpm) {
-        if (lastRUEcps.hasChanged (rpm * countsPerRotation / 60.0d)) {
+        if (lastRUEcps.cacheAndGate(rpm * countsPerRotation / 60.0d)) {
             motor.setVelocity(lastRUEcps.get());
         }
     }
 
     private void moveTo(double rotations) {
-        if (lastRTPcounts.hasChanged(rotations * countsPerRotation))
+        if (lastRTPcounts.cacheAndGate(rotations * countsPerRotation))
             motor.setTargetPosition(lastRTPcounts.getAsInt());
     }
 
@@ -226,6 +226,7 @@ public class GenericMotorSubsystem extends SubsystemBase {
             @Override
             public void initialize() {
                 setZeroPowerBehavior(zeroPowerBehavior);
+                goRWE();
                 setPower(0);
             }
         };
@@ -254,9 +255,9 @@ public class GenericMotorSubsystem extends SubsystemBase {
     public Command cmdBrake() { return cmdBrakeOrFloat(BRAKE); }
     public Command cmdFloat() { return cmdBrakeOrFloat(FLOAT); }
     public Command cmdAdvanceFromHere(DoubleSupplier rotations) { return cmdMoveTo (() -> getMeasuredRotations() + rotations.getAsDouble()); }
-    public Command cmdAdvanceAdditional(DoubleSupplier rotations) { return cmdMoveTo (() -> lastRTPcounts.getRotations() + rotations.getAsDouble()); }
+    public Command cmdAdvanceFromSetpoint(DoubleSupplier rotations) { return cmdMoveTo (() -> lastRTPcounts.getRotations() + rotations.getAsDouble()); }
     public Command cmdRegressFromHere(DoubleSupplier rotations) { return cmdMoveTo (() -> getMeasuredRotations() - rotations.getAsDouble()); }
-    public Command cmdRegressAdditional(DoubleSupplier rotations) { return cmdMoveTo (() -> lastRTPcounts.getRotations() - rotations.getAsDouble()); }
+    public Command cmdRegressFromSetpoint(DoubleSupplier rotations) { return cmdMoveTo (() -> lastRTPcounts.getRotations() - rotations.getAsDouble()); }
     public Command cmdIncreasePositionP() { return cmdChangePositionP(1.02); }
     public Command cmdDecreasePositionP() { return cmdChangePositionP(1.0/1.02); }
     public Command cmdIncreasePositionPower() { return cmdChangePositionPower(.05); }
@@ -267,14 +268,14 @@ public class GenericMotorSubsystem extends SubsystemBase {
     public Command cmdFindMotorConstants(DoubleSupplier RPM) {
         Runnable report = ()->
                 Log.i("FTC20311",String.format(
-                    "VP=%.2f VF=%.2f RPM=%.2f WANT=%.2f",
-                    velocityP,
-                    velocityF,
-                    getMeasuredRPM(),
-                    RPM.getAsDouble()));
+                        "VP=%.2f VF=%.2f RPM=%.2f WANT=%.2f",
+                        velocityP,
+                        velocityF,
+                        getMeasuredRPM(),
+                        RPM.getAsDouble()));
         Command keepReporting = new RepeatCommand(
-                    new WaitCommand(100)
-                    .andThen(new InstantCommand(report)));
+                new WaitCommand(100)
+                        .andThen(new InstantCommand(report)));
         return cmdSetRPM(RPM).alongWith(new SequentialCommandGroup(
                 new InstantCommand( ()-> {
                     if(velocityF == 0) velocityF = 10.0d;
