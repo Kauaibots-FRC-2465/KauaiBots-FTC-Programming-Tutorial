@@ -33,7 +33,7 @@ public class GenericMotorSubsystem extends SubsystemBase {
         private final double quantization;
         private boolean isValid=false;
 
-        DcMotorExCache(double quantization) { this.quantization = quantization; }
+        private DcMotorExCache(double quantization) { this.quantization = quantization; }
 
         void invalidate() { isValid = false; }
 
@@ -52,22 +52,28 @@ public class GenericMotorSubsystem extends SubsystemBase {
         double getRotations() { return lastValue/countsPerRotation; }
     }
 
+    private double countsPerRotation;
     private final DcMotorEx motor;
-    private final double countsPerRotation;
+
     // Default values
     private double positionP = 10.0d;
     private double positionPower = 0.15d;
     private double velocityP = 20.0d;
     private double velocityF = 13.9d;
     private DcMotor.ZeroPowerBehavior defaultZPB = BRAKE;
+
     // RunMode cache
     private DcMotor.RunMode lastRunMode;
-    // RUN_USING_ENCODER cache
-    private final DcMotorExCache lastRUEcps  = new DcMotorExCache(20d);
-    // RUN_WITHOUT_ENCODER cache
+
+    // RUN_USING_ENCODER cache - hardware quantizes to 20 ticks/sec
+    private final DcMotorExCache lastRUEcps = new DcMotorExCache(20d);
+
+    // RUN_WITHOUT_ENCODER cache - hardware uses a 16-bit signed integer (32767 steps)
     private final DcMotorExCache lastRWEpower = new DcMotorExCache(1d/32767d);
-    // RUN_TO_POSITION cache
+
+    // RUN_TO_POSITION cache - hardware quantizes to individual encoder ticks
     private final DcMotorExCache lastRTPcounts = new DcMotorExCache(1d);
+
     // ZeroPowerBehavior cache
     private DcMotor.ZeroPowerBehavior lastZPB;
 
@@ -112,10 +118,6 @@ public class GenericMotorSubsystem extends SubsystemBase {
         motor.setVelocityPIDFCoefficients(lastRunMode ==RUN_USING_ENCODER?velocityP:0, 0, 0, velocityF);
     }
 
-    private void setPower(double power) {
-        if (lastRWEpower.cacheAndGate(power)) motor.setPower(power);
-    }
-
     private void goRWE() {
         restoreZeroPowerBehavior();
         if (lastRunMode == RUN_WITHOUT_ENCODER) return;
@@ -154,6 +156,10 @@ public class GenericMotorSubsystem extends SubsystemBase {
     private double getMeasuredRPM()
     {
         return motor.getVelocity() / countsPerRotation * 60.0;
+    }
+
+    private void setPower(double power) {
+        if (lastRWEpower.cacheAndGate(power)) motor.setPower(power);
     }
 
     private void setRPM(double rpm) {
@@ -199,11 +205,6 @@ public class GenericMotorSubsystem extends SubsystemBase {
         };
     }
 
-    public Command cmdWaitUntilInPosition(double rotationsTolerance) {
-        return new WaitUntilCommand
-                (() -> Math.abs((getMeasuredRotations() - lastRTPcounts.getRotations())) < rotationsTolerance);
-    }
-
     private Command cmdMoveTo(DoubleSupplier rotations) {
         return new OverrideCommand(this) {
             @Override
@@ -218,6 +219,11 @@ public class GenericMotorSubsystem extends SubsystemBase {
         };
     }
 
+    public Command cmdWaitUntilInPosition(double rotationsTolerance) {
+        return new WaitUntilCommand
+                (() -> Math.abs((getMeasuredRotations() - lastRTPcounts.getRotations())) < rotationsTolerance);
+    }
+
     // Brakes or floats immediately, but does not change default behavior
     private Command cmdBrakeOrFloat(DcMotor.ZeroPowerBehavior zeroPowerBehavior) {
         return new OverrideCommand(this) {
@@ -228,25 +234,6 @@ public class GenericMotorSubsystem extends SubsystemBase {
                 setPower(0);
             }
         };
-    }
-
-    private Command cmdChangePositionP(double scale) {
-        return new InstantCommand(() -> {
-            setMotorCoefficients(positionP*scale, positionPower, velocityP, velocityF);
-            Log.i("FTC20311", "Position p = "+positionP);
-        });
-    }
-
-    private Command cmdChangePositionPower(double amount) {
-        return new InstantCommand(() -> {
-            positionPower = MathUtils.clamp(positionPower+amount, 0, 1);
-            setMotorCoefficients(positionP, positionPower, velocityP, velocityF);
-            Log.i("FTC20311", "Position power = "+positionPower);
-        });
-    }
-
-    private Command cmdChangeVelocityP(double scale) {
-        return new InstantCommand(() -> setMotorCoefficients(positionP, positionPower, velocityP*scale, velocityF));
     }
 
     public Command cmdStop() { return cmdSetPower(()->0); }
@@ -303,4 +290,25 @@ public class GenericMotorSubsystem extends SubsystemBase {
     public Command cmdTunePositionP() {
         return cmdAdvanceFromHere(()->0);
     }
+
+    private Command cmdChangePositionP(double scale) {
+        return new InstantCommand(() -> {
+            setMotorCoefficients(positionP*scale, positionPower, velocityP, velocityF);
+            Log.i("FTC20311", "Position p = "+positionP);
+        });
+    }
+
+    private Command cmdChangePositionPower(double amount) {
+        return new InstantCommand(() -> {
+            positionPower = MathUtils.clamp(positionPower+amount, 0, 1);
+            setMotorCoefficients(positionP, positionPower, velocityP, velocityF);
+            Log.i("FTC20311", "Position power = "+positionPower);
+        });
+    }
+
+    private Command cmdChangeVelocityP(double scale) {
+        return new InstantCommand(() -> setMotorCoefficients(positionP, positionPower, velocityP*scale, velocityF));
+    }
+
+
 }
