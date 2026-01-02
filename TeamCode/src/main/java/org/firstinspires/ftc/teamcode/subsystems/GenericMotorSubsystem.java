@@ -26,7 +26,7 @@ import org.firstinspires.ftc.teamcode.OverrideCommand;
 
 import java.util.function.DoubleSupplier;
 
-public class GenericPositioningSubsystem extends SubsystemBase {
+public class GenericMotorSubsystem extends SubsystemBase {
     private class Cache {
         private double lastValue;
         private int lastValueInSteps;
@@ -73,7 +73,7 @@ public class GenericPositioningSubsystem extends SubsystemBase {
     // ZeroPowerBehavior cache
     private DcMotor.ZeroPowerBehavior lastZPB;
 
-    public GenericPositioningSubsystem(HardwareMap hardwareMap, String motorName, DcMotorSimple.Direction direction, double countsPerRotation) {
+    public GenericMotorSubsystem(HardwareMap hardwareMap, String motorName, DcMotorSimple.Direction direction, double countsPerRotation) {
         this.countsPerRotation = countsPerRotation;
         try {
             motor = hardwareMap.get(DcMotorEx.class, motorName);

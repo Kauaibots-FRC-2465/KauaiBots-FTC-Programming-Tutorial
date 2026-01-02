@@ -17,12 +17,12 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.seattlesolvers.solverslib.hardware.motors.Motor;
 
 import org.firstinspires.ftc.teamcode.subsystems.FlywheelSubsystem;
-import org.firstinspires.ftc.teamcode.subsystems.GenericPositioningSubsystem;
+import org.firstinspires.ftc.teamcode.subsystems.GenericMotorSubsystem;
 
 @TeleOp(name = "2025 Decode Tuning", group = "20311")
 public class DecodeTuning extends CommandOpMode {
     private FlywheelSubsystem fs;
-    private GenericPositioningSubsystem intake;
+    private GenericMotorSubsystem intake;
     private VoltageSensor controlHubVSensor = null;
     private GamepadEx driverGamepad;
     private GamepadButton findMotorConstantsButton;
@@ -49,7 +49,7 @@ public class DecodeTuning extends CommandOpMode {
         fs = new FlywheelSubsystem(hardwareMap, controlHubVSensor, 28, 3);
         fs.addFlywheelMotor("shooter1", DcMotorSimple.Direction.REVERSE);
         fs.addFlywheelMotor("shooter2", DcMotorSimple.Direction.REVERSE);
-        intake = new GenericPositioningSubsystem(hardwareMap, "intake", FORWARD, Motor.GoBILDA.RPM_1150.getCPR());
+        intake = new GenericMotorSubsystem(hardwareMap, "intake", FORWARD, Motor.GoBILDA.RPM_1150.getCPR());
         driverGamepad = new GamepadEx(gamepad1);
         findMotorConstantsButton = new GamepadButton(driverGamepad, GamepadKeys.Button.CROSS); // aka A;
         stopButton = new GamepadButton(driverGamepad, GamepadKeys.Button.CIRCLE); // aka B
