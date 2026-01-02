@@ -27,13 +27,13 @@ import org.firstinspires.ftc.teamcode.OverrideCommand;
 import java.util.function.DoubleSupplier;
 
 public class GenericMotorSubsystem extends SubsystemBase {
-    private class Cache {
+    private class DcMotorExCache {
         private double lastValue;
         private int lastValueInSteps;
         private final double quantization;
         private boolean isValid=false;
 
-        Cache(double quantization) { this.quantization = quantization; }
+        DcMotorExCache(double quantization) { this.quantization = quantization; }
 
         void invalidate() { isValid = false; }
 
@@ -65,11 +65,11 @@ public class GenericMotorSubsystem extends SubsystemBase {
     // RunMode cache
     private DcMotor.RunMode lastRunMode;
     // RUN_USING_ENCODER cache
-    private final Cache lastRUEcps  = new Cache(20d);
+    private final DcMotorExCache lastRUEcps  = new DcMotorExCache(20d);
     // RUN_WITHOUT_ENCODER cache
-    private final Cache lastRWEpower = new Cache(1d/32767d);
+    private final DcMotorExCache lastRWEpower = new DcMotorExCache(1d/32767d);
     // RUN_TO_POSITION cache
-    private final Cache lastRTPcounts = new Cache(1d);
+    private final DcMotorExCache lastRTPcounts = new DcMotorExCache(1d);
     // ZeroPowerBehavior cache
     private DcMotor.ZeroPowerBehavior lastZPB;
 
