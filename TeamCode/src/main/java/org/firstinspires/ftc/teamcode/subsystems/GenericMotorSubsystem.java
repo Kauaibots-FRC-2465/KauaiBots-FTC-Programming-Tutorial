@@ -102,7 +102,7 @@ public class GenericMotorSubsystem extends SubsystemBase {
         if (lastRunMode == RUN_TO_POSITION) {
             motor.setPower(positionPower);
             motor.setPositionPIDFCoefficients(positionP);
-s        }
+        }
         if (lastRunMode == RUN_WITHOUT_ENCODER) return;
         motor.setVelocityPIDFCoefficients(lastRunMode ==RUN_USING_ENCODER?velocityP:0, 0, 0, velocityF);
     }
