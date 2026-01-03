@@ -183,7 +183,7 @@ public class GenericMotorSubsystem extends SubsystemBase {
         };
     }
 
-    private Command cmdMoveTo(DoubleSupplier rotations) {
+    public Command cmdMoveTo(DoubleSupplier rotations) {
         return new OverrideCommand(this) {
             @Override
             public void initialize() {
