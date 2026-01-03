@@ -104,7 +104,6 @@ public class GenericMotorSubsystem extends SubsystemBase {
         motor.setVelocityPIDFCoefficients(lastRunMode ==RUN_USING_ENCODER?velocityP:0, 0, 0, velocityF);
     }
 
-
     private void goRWE() {
         restoreZeroPowerBehavior();
         if (lastRunMode == RUN_WITHOUT_ENCODER) return;
