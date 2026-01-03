@@ -103,4 +103,36 @@ public class GenericMotorSubsystem extends SubsystemBase {
         motor.setPositionPIDFCoefficients(positionP);
         motor.setVelocityPIDFCoefficients(lastRunMode ==RUN_USING_ENCODER?velocityP:0, 0, 0, velocityF);
     }
+
+
+    private void goRWE() {
+        restoreZeroPowerBehavior();
+        if (lastRunMode == RUN_WITHOUT_ENCODER) return;
+        motor.setMode(RUN_WITHOUT_ENCODER);
+        lastRunMode = RUN_WITHOUT_ENCODER;
+        lastRUEcps.invalidate();
+        lastRTPcounts.invalidate();
+    }
+
+    private void goRUE() {
+        restoreZeroPowerBehavior();
+        if (lastRunMode == RUN_USING_ENCODER) return;
+        lastRunMode = RUN_USING_ENCODER;
+        motor.setMode(lastRunMode);
+        setMotorCoefficients(positionP, positionPower, velocityP, velocityF);
+        lastRWEpower.invalidate();
+        lastRTPcounts.invalidate();
+    }
+
+    private void goRTP(double rotations) {
+        restoreZeroPowerBehavior();
+        if (lastRunMode == RUN_TO_POSITION) return;
+        lastRTPcounts.cacheAndGate(rotations * countsPerRotation);
+        motor.setTargetPosition(lastRTPcounts.getAsInt());
+        motor.setMode(RUN_TO_POSITION);
+        lastRunMode = RUN_TO_POSITION;
+        setMotorCoefficients(positionP, positionPower, velocityP, velocityF);
+        lastRWEpower.invalidate();
+        lastRUEcps.invalidate();
+    }
 }
