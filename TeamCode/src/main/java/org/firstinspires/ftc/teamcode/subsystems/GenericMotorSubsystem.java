@@ -96,7 +96,7 @@ public class GenericMotorSubsystem extends SubsystemBase {
 
     private void setMotorCoefficients(double positionP, double positionPower, double velocityP, double velocityF) {
         this.positionP = positionP;
-        this.positionPower = positionPower;
+        this.positionPower = positionPower ;
         this.velocityP = velocityP;
         this.velocityF = velocityF;
         if(lastRunMode == RUN_TO_POSITION) motor.setPower(positionPower);
