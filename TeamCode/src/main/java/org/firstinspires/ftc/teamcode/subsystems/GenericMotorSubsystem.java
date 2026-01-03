@@ -99,8 +99,11 @@ public class GenericMotorSubsystem extends SubsystemBase {
         this.positionPower = positionPower;
         this.velocityP = velocityP;
         this.velocityF = velocityF;
-        if(lastRunMode == RUN_TO_POSITION) motor.setPower(positionPower);
-        motor.setPositionPIDFCoefficients(positionP);
+        if (lastRunMode == RUN_TO_POSITION) {
+            motor.setPower(positionPower);
+            motor.setPositionPIDFCoefficients(positionP);
+s        }
+        if (lastRunMode == RUN_WITHOUT_ENCODER) return;
         motor.setVelocityPIDFCoefficients(lastRunMode ==RUN_USING_ENCODER?velocityP:0, 0, 0, velocityF);
     }
 }
