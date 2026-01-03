@@ -10,7 +10,12 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.seattlesolvers.solverslib.command.Command;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
+
+import org.firstinspires.ftc.teamcode.OverrideCommand;
+
+import java.util.function.DoubleSupplier;
 
 public class GenericMotorSubsystem extends SubsystemBase {
     private class DcMotorExCache {
@@ -122,5 +127,75 @@ public class GenericMotorSubsystem extends SubsystemBase {
         if(runMode != RUN_WITHOUT_ENCODER) lastRWEpower.invalidate();
         if(runMode != RUN_USING_ENCODER) lastRUEcps.invalidate();
         if(runMode != RUN_TO_POSITION) lastRTPcounts.invalidate();
+    }
+
+    private double getMeasuredRotations() {
+        return (double)motor.getCurrentPosition() / countsPerRotation;
+    }
+
+    private double getMeasuredRPM()
+    {
+        return motor.getVelocity() / countsPerRotation * 60.0;
+    }
+
+    private void setPower(double power) {
+        if (lastRWEpower.cacheAndGate(power)) {
+            motor.setPower(power);
+        }
+    }
+
+    private void setRPM(double rpm) {
+        if (lastRUEcps.cacheAndGate(rpm * countsPerRotation / 60.0d)) {
+            motor.setVelocity(lastRUEcps.get());
+        }
+    }
+
+    private void moveTo(double rotations) {
+        if (lastRTPcounts.cacheAndGate(rotations * countsPerRotation))
+            motor.setTargetPosition(lastRTPcounts.getAsInt());
+    }
+
+    public Command cmdSetPower(DoubleSupplier power) {
+        return new OverrideCommand(this) {
+            @Override
+            public void initialize() {
+                switchModes(RUN_WITHOUT_ENCODER);
+            }
+
+            @Override
+            public void execute() {
+                setPower(power.getAsDouble());
+            }
+        };
+    }
+
+    public Command cmdSetRPM(DoubleSupplier rpm) {
+        return new OverrideCommand(this) {
+            @Override
+            public void initialize() {
+                switchModes(RUN_USING_ENCODER);
+            }
+
+            @Override
+            public void execute() {
+                setRPM(rpm.getAsDouble());
+            }
+        };
+    }
+
+    private Command cmdMoveTo(DoubleSupplier rotations) {
+        return new OverrideCommand(this) {
+            @Override
+            public void initialize() {
+                // extra moveTo required to prevent the motor from jerking when switching modes
+                moveTo(rotations.getAsDouble());
+                switchModes(RUN_TO_POSITION);
+            }
+
+            @Override
+            public void execute() {
+                moveTo(rotations.getAsDouble());
+            }
+        };
     }
 }
