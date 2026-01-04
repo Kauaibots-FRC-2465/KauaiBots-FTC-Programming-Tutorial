@@ -25,7 +25,7 @@ public class Constants {
             .useSecondaryHeadingPIDF(true) // Added per https://pedropathing.com/docs/pathing/tuning/pids *Dual PID System*
             /*far   */.headingPIDFCoefficients(new PIDFCoefficients(0.9d, 0.0d, 0.08d, 0.08d)) // Added per https://pedropathing.com/docs/pathing/tuning/pids/heading *Update Tuned values Into Your Code*
             /*near  */.secondaryHeadingPIDFCoefficients(new PIDFCoefficients(0d, 0.0d, 0.0d, 0.0d))  // Added per https://pedropathing.com/docs/pathing/tuning/pids/heading *Update Tuned values Into Your Code*
-            /*switch*/.headingPIDFSwitch(.003); // Left out of the documentation, add it ourselves.
+            /*switch*/.headingPIDFSwitch(0.003); // Left out of the documentation, add it ourselves.
 
     public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);
 
