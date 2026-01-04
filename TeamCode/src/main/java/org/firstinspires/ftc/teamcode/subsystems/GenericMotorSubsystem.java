@@ -123,4 +123,30 @@ public class GenericMotorSubsystem extends SubsystemBase {
         if(runMode != RUN_USING_ENCODER) lastRUEcps.invalidate();
         if(runMode != RUN_TO_POSITION) lastRTPcounts.invalidate();
     }
+
+    private double getMeasuredRotations() {
+        return (double)motor.getCurrentPosition() / countsPerRotation;
+    }
+
+    private double getMeasuredRPM()
+    {
+        return motor.getVelocity() / countsPerRotation * 60.0;
+    }
+
+    private void setPower(double power) {
+        if (lastRWEpower.cacheAndGate(power)) {
+            motor.setPower(power);
+        }
+    }
+
+    private void setRPM(double rpm) {
+        if (lastRUEcps.cacheAndGate(rpm * countsPerRotation / 60.0d)) {
+            motor.setVelocity(lastRUEcps.get());
+        }
+    }
+
+    private void moveTo(double rotations) {
+        if (lastRTPcounts.cacheAndGate(rotations * countsPerRotation))
+            motor.setTargetPosition(lastRTPcounts.getAsInt());
+    }
 }
