@@ -188,30 +188,6 @@ public class GenericMotorSubsystem extends SubsystemBase {
         };
     }
 
-    private Command cmdMoveTo(DoubleSupplier staticRotations, DoubleSupplier dynamicRotations, Double tolerance) {
-        return new OverrideCommand(this) {
-            double offset;
-            @Override
-            public void initialize() {
-                offset=staticRotations.getAsDouble();
-                // extra moveTo required to prevent the motor from jerking when switching modes
-                moveTo(offset+dynamicRotations.getAsDouble());
-                switchModes(RUN_TO_POSITION);
-            }
-
-            @Override
-            public void execute() {
-                moveTo(offset+dynamicRotations.getAsDouble());
-            }
-
-            @Override
-            public boolean isFinished() {
-                if (tolerance==null) return false;
-                return Math.abs(getMeasuredRotations() - (offset+dynamicRotations.getAsDouble())) < tolerance;
-            }
-        };
-    }
-
     // Brakes or floats immediately, but does not change default behavior
     private Command cmdBrakeOrFloat(DcMotor.ZeroPowerBehavior zeroPowerBehavior) {
         return new OverrideCommand(this) {
@@ -241,6 +217,30 @@ public class GenericMotorSubsystem extends SubsystemBase {
 
     private Command cmdChangeVelocityP(double scale) {
         return new InstantCommand(() -> setMotorCoefficients(positionP, positionPower, velocityP*scale, velocityF));
+    }
+
+    private Command cmdMoveTo(DoubleSupplier staticRotations, DoubleSupplier dynamicRotations, Double tolerance) {
+        return new OverrideCommand(this) {
+            double offset;
+            @Override
+            public void initialize() {
+                offset=staticRotations.getAsDouble();
+                // extra moveTo required to prevent the motor from jerking when switching modes
+                moveTo(offset+dynamicRotations.getAsDouble());
+                switchModes(RUN_TO_POSITION);
+            }
+
+            @Override
+            public void execute() {
+                moveTo(offset+dynamicRotations.getAsDouble());
+            }
+
+            @Override
+            public boolean isFinished() {
+                if (tolerance==null) return false;
+                return Math.abs(getMeasuredRotations() - (offset+dynamicRotations.getAsDouble())) < tolerance;
+            }
+        };
     }
 
     public Command cmdBrake() { return cmdBrakeOrFloat(BRAKE); }
