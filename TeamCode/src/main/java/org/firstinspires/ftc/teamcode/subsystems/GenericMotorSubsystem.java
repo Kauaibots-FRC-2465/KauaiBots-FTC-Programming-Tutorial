@@ -1,8 +1,8 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_TO_POSITION;
-import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_WITHOUT_ENCODER;
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_USING_ENCODER;
+import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_WITHOUT_ENCODER;
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.STOP_AND_RESET_ENCODER;
 import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE;
 import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.FLOAT;
@@ -113,40 +113,29 @@ public class GenericMotorSubsystem extends SubsystemBase {
         this.positionPower = positionPower;
         this.velocityP = velocityP;
         this.velocityF = velocityF;
-        if(lastRunMode == RUN_TO_POSITION) motor.setPower(positionPower);
-        motor.setPositionPIDFCoefficients(positionP);
+        if (lastRunMode == RUN_TO_POSITION) {
+            motor.setPower(positionPower);
+            motor.setPositionPIDFCoefficients(positionP);
+        }
+        if (lastRunMode == RUN_WITHOUT_ENCODER) return;
         motor.setVelocityPIDFCoefficients(lastRunMode ==RUN_USING_ENCODER?velocityP:0, 0, 0, velocityF);
     }
 
-    private void goRWE() {
+    /**
+     * Switch the mode of the motor
+     * Warning: remember to moveTo() before you switchModes(), or the motor may jerk
+     */
+    private void switchModes(DcMotor.RunMode runMode)
+    {
         restoreZeroPowerBehavior();
-        if (lastRunMode == RUN_WITHOUT_ENCODER) return;
-        motor.setMode(RUN_WITHOUT_ENCODER);
-        lastRunMode = RUN_WITHOUT_ENCODER;
-        lastRUEcps.invalidate();
-        lastRTPcounts.invalidate();
-    }
-
-    private void goRUE() {
-        restoreZeroPowerBehavior();
-        if (lastRunMode == RUN_USING_ENCODER) return;
-        lastRunMode = RUN_USING_ENCODER;
-        motor.setMode(lastRunMode);
+        if (lastRunMode == runMode) return;
+        lastRunMode = runMode;
+        if(runMode == RUN_TO_POSITION) motor.setTargetPosition(lastRTPcounts.getAsInt());
+        motor.setMode(runMode);
         setMotorCoefficients(positionP, positionPower, velocityP, velocityF);
-        lastRWEpower.invalidate();
-        lastRTPcounts.invalidate();
-    }
-
-    private void goRTP(double rotations) {
-        restoreZeroPowerBehavior();
-        if (lastRunMode == RUN_TO_POSITION) return;
-        lastRTPcounts.cacheAndGate(rotations * countsPerRotation);
-        motor.setTargetPosition(lastRTPcounts.getAsInt());
-        motor.setMode(RUN_TO_POSITION);
-        lastRunMode = RUN_TO_POSITION;
-        setMotorCoefficients(positionP, positionPower, velocityP, velocityF);
-        lastRWEpower.invalidate();
-        lastRUEcps.invalidate();
+        if(runMode != RUN_WITHOUT_ENCODER) lastRWEpower.invalidate();
+        if(runMode != RUN_USING_ENCODER) lastRUEcps.invalidate();
+        if(runMode != RUN_TO_POSITION) lastRTPcounts.invalidate();
     }
 
     private double getMeasuredRotations() {
@@ -159,7 +148,9 @@ public class GenericMotorSubsystem extends SubsystemBase {
     }
 
     private void setPower(double power) {
-        if (lastRWEpower.cacheAndGate(power)) motor.setPower(power);
+        if (lastRWEpower.cacheAndGate(power)) {
+            motor.setPower(power);
+        }
     }
 
     private void setRPM(double rpm) {
@@ -173,15 +164,11 @@ public class GenericMotorSubsystem extends SubsystemBase {
             motor.setTargetPosition(lastRTPcounts.getAsInt());
     }
 
-    public Command cmdSetDefaultZeroPowerBehavior(DcMotor.ZeroPowerBehavior zeroPowerBehavior) {
-        return new InstantCommand(() -> setDefaultZeroPowerBehavior(zeroPowerBehavior));
-    }
-
     public Command cmdSetPower(DoubleSupplier power) {
         return new OverrideCommand(this) {
             @Override
             public void initialize() {
-                goRWE();
+                switchModes(RUN_WITHOUT_ENCODER);
             }
 
             @Override
@@ -195,7 +182,7 @@ public class GenericMotorSubsystem extends SubsystemBase {
         return new OverrideCommand(this) {
             @Override
             public void initialize() {
-                goRUE();
+                switchModes(RUN_USING_ENCODER);
             }
 
             @Override
@@ -205,11 +192,13 @@ public class GenericMotorSubsystem extends SubsystemBase {
         };
     }
 
-    private Command cmdMoveTo(DoubleSupplier rotations) {
+    public Command cmdMoveTo(DoubleSupplier rotations) {
         return new OverrideCommand(this) {
             @Override
             public void initialize() {
-                goRTP(rotations.getAsDouble());
+                // extra moveTo required to prevent the motor from jerking when switching modes
+                moveTo(rotations.getAsDouble());
+                switchModes(RUN_TO_POSITION);
             }
 
             @Override
@@ -219,21 +208,40 @@ public class GenericMotorSubsystem extends SubsystemBase {
         };
     }
 
-    public Command cmdWaitUntilInPosition(double rotationsTolerance) {
-        return new WaitUntilCommand
-                (() -> Math.abs((getMeasuredRotations() - lastRTPcounts.getRotations())) < rotationsTolerance);
-    }
-
     // Brakes or floats immediately, but does not change default behavior
     private Command cmdBrakeOrFloat(DcMotor.ZeroPowerBehavior zeroPowerBehavior) {
         return new OverrideCommand(this) {
             @Override
             public void initialize() {
                 setZeroPowerBehavior(zeroPowerBehavior);
-                goRWE();
+                switchModes(RUN_WITHOUT_ENCODER);
                 setPower(0);
             }
         };
+    }
+
+    public Command cmdWaitUntilInPosition(double rotationsTolerance) {
+        return new WaitUntilCommand
+                (() -> Math.abs((getMeasuredRotations() - lastRTPcounts.getRotations())) < rotationsTolerance);
+    }
+
+    private Command cmdChangePositionP(double scale) {
+        return new InstantCommand(() -> {
+            setMotorCoefficients(positionP*scale, positionPower, velocityP, velocityF);
+            Log.i("FTC20311", "Position p = "+positionP);
+        });
+    }
+
+    private Command cmdChangePositionPower(double amount) {
+        return new InstantCommand(() -> {
+            positionPower = MathUtils.clamp(positionPower+amount, 0, 1);
+            setMotorCoefficients(positionP, positionPower, velocityP, velocityF);
+            Log.i("FTC20311", "Position power = "+positionPower);
+        });
+    }
+
+    private Command cmdChangeVelocityP(double scale) {
+        return new InstantCommand(() -> setMotorCoefficients(positionP, positionPower, velocityP*scale, velocityF));
     }
 
     public Command cmdStop() { return cmdSetPower(()->0); }
@@ -290,25 +298,4 @@ public class GenericMotorSubsystem extends SubsystemBase {
     public Command cmdTunePositionP() {
         return cmdAdvanceFromHere(()->0);
     }
-
-    private Command cmdChangePositionP(double scale) {
-        return new InstantCommand(() -> {
-            setMotorCoefficients(positionP*scale, positionPower, velocityP, velocityF);
-            Log.i("FTC20311", "Position p = "+positionP);
-        });
-    }
-
-    private Command cmdChangePositionPower(double amount) {
-        return new InstantCommand(() -> {
-            positionPower = MathUtils.clamp(positionPower+amount, 0, 1);
-            setMotorCoefficients(positionP, positionPower, velocityP, velocityF);
-            Log.i("FTC20311", "Position power = "+positionPower);
-        });
-    }
-
-    private Command cmdChangeVelocityP(double scale) {
-        return new InstantCommand(() -> setMotorCoefficients(positionP, positionPower, velocityP*scale, velocityF));
-    }
-
-
 }
