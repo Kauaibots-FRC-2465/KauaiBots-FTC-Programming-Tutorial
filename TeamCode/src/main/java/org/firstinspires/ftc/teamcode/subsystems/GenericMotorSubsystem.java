@@ -229,7 +229,7 @@ public class GenericMotorSubsystem extends SubsystemBase {
         });
     }
 
-    private Command cmdChangePositionPower(double amount) {
+    private Command cmdChangePosiMathUtilstionPower(double amount) {
         return new InstantCommand(() -> {
             positionPower = MathUtils.clamp(positionPower+amount, 0, 1);
             setMotorCoefficients(positionP, positionPower, velocityP, velocityF);
