@@ -189,22 +189,6 @@ public class GenericMotorSubsystem extends SubsystemBase {
         };
     }
 
-    public Command cmdMoveTo(DoubleSupplier rotations) {
-        return new OverrideCommand(this) {
-            @Override
-            public void initialize() {
-                // extra moveTo required to prevent the motor from jerking when switching modes
-                moveTo(rotations.getAsDouble());
-                switchModes(RUN_TO_POSITION);
-            }
-
-            @Override
-            public void execute() {
-                moveTo(rotations.getAsDouble());
-            }
-        };
-    }
-
     // Brakes or floats immediately, but does not change default behavior
     private Command cmdBrakeOrFloat(DcMotor.ZeroPowerBehavior zeroPowerBehavior) {
         return new OverrideCommand(this) {
@@ -215,11 +199,6 @@ public class GenericMotorSubsystem extends SubsystemBase {
                 setPower(0);
             }
         };
-    }
-
-    public Command cmdWaitUntilInPosition(double rotationsTolerance) {
-        return new WaitUntilCommand
-                (() -> Math.abs((getMeasuredRotations() - lastRTPcounts.getRotations())) < rotationsTolerance);
     }
 
     private Command cmdChangePositionP(double scale) {
