@@ -219,56 +219,27 @@ public class GenericMotorSubsystem extends SubsystemBase {
         return new InstantCommand(() -> setMotorCoefficients(positionP, positionPower, velocityP*scale, velocityF));
     }
 
-    private Command cmdMoveTo(DoubleSupplier staticRotations, DoubleSupplier dynamicRotations, Double tolerance) {
+    private Command cmdMoveTo(DoubleSupplier offsetRotations, DoubleSupplier rotations, Double tolerance) {
         return new OverrideCommand(this) {
             double offset;
             @Override
             public void initialize() {
-                offset=staticRotations.getAsDouble();
+                offset=offsetRotations.getAsDouble();
                 // extra moveTo required to prevent the motor from jerking when switching modes
-                moveTo(offset+dynamicRotations.getAsDouble());
+                moveTo(offset+rotations.getAsDouble());
                 switchModes(RUN_TO_POSITION);
             }
 
             @Override
             public void execute() {
-                moveTo(offset+dynamicRotations.getAsDouble());
+                moveTo(offset+rotations.getAsDouble());
             }
 
             @Override
             public boolean isFinished() {
                 if (tolerance==null) return false;
-                return Math.abs(getMeasuredRotations() - (offset+dynamicRotations.getAsDouble())) < tolerance;
+                return Math.abs(getMeasuredRotations() - (offset+rotations.getAsDouble())) < tolerance;
             }
         };
     }
-
-    public Command cmdBrake() { return cmdBrakeOrFloat(BRAKE); }
-    public Command cmdFloat() { return cmdBrakeOrFloat(FLOAT); }
-    public Command cmdMoveTo(DoubleSupplier rotations) { return cmdMoveTo(()->0, rotations, null); }
-    public Command cmdAdvanceFromHere(DoubleSupplier rotations) { return cmdMoveTo (() -> getMeasuredRotations(), () -> rotations.getAsDouble(), null ); }
-    public Command cmdAdvanceFromSetpoint(DoubleSupplier rotations) { return cmdMoveTo (() -> lastRTPcounts.getRotations(), () -> rotations.getAsDouble(), null); }
-    public Command cmdRegressFromHere(DoubleSupplier rotations) { return cmdMoveTo (() -> getMeasuredRotations(), () -> -rotations.getAsDouble(), null); }
-    public Command cmdRegressFromSetpoint(DoubleSupplier rotations) { return cmdMoveTo (() -> lastRTPcounts.getRotations(),() -> -rotations.getAsDouble(), null); }
-    public Command cmdMoveToAndWait(DoubleSupplier rotations, double tolerance) { return cmdMoveTo(()->0, rotations, tolerance); }
-    public Command cmdAdvanceFromHereAndWait(DoubleSupplier rotations, double tolerance) { return cmdMoveTo (()->getMeasuredRotations(), rotations, tolerance); }
-    public Command cmdAdvanceFromSetpointAndWait(DoubleSupplier rotations, double tolerance) { return cmdMoveTo (()->lastRTPcounts.getRotations(), rotations, tolerance); }
-    public Command cmdRegressFromHereAndWait(DoubleSupplier rotations, double tolerance) { return cmdMoveTo (()->getMeasuredRotations(), ()->-rotations.getAsDouble(), tolerance); }
-    public Command cmdRegressFromSetpointAndWait(DoubleSupplier rotations, double tolerance) { return cmdMoveTo (()->lastRTPcounts.getRotations(), ()->-rotations.getAsDouble(), tolerance); }
-    public Command cmdMoveTo(double rotations) { return cmdMoveTo(()->0,()->rotations, null); }
-    public Command cmdAdvanceFromHere(double rotations) { return cmdMoveTo (() -> getMeasuredRotations(), () -> rotations, null ); }
-    public Command cmdAdvanceFromSetpoint(double rotations) { return cmdMoveTo (() -> lastRTPcounts.getRotations(), () -> rotations, null); }
-    public Command cmdRegressFromHere(double rotations) { return cmdMoveTo (() -> getMeasuredRotations(), () -> -rotations, null); }
-    public Command cmdRegressFromSetpoint(double rotations) { return cmdMoveTo (() -> lastRTPcounts.getRotations(),() -> -rotations, null); }
-    public Command cmdMoveToAndWait(double rotations, double tolerance) { return cmdMoveTo(()->0, ()->rotations, tolerance); }
-    public Command cmdAdvanceFromHereAndWait(double rotations, double tolerance) { return cmdMoveTo (()->getMeasuredRotations(), ()->rotations, tolerance); }
-    public Command cmdAdvanceFromSetpointAndWait(double rotations, double tolerance) { return cmdMoveTo (()->lastRTPcounts.getRotations(), ()->rotations, tolerance); }
-    public Command cmdRegressFromHereAndWait(double rotations, double tolerance) { return cmdMoveTo (()->getMeasuredRotations(), ()->-rotations, tolerance); }
-    public Command cmdRegressFromSetpointAndWait(double rotations, double tolerance) { return cmdMoveTo (()->lastRTPcounts.getRotations(), ()->-rotations, tolerance); }
-    public Command cmdIncreasePositionP() { return cmdChangePositionP(1.02); }
-    public Command cmdDecreasePositionP() { return cmdChangePositionP(1.0/1.02); }
-    public Command cmdIncreasePositionPower() { return cmdChangePositionPower(.05); }
-    public Command cmdDecreasePositionPower() { return cmdChangePositionPower(-.05); }
-    public Command cmdIncreaseVelocityP() { return cmdChangeVelocityP(1.02); }
-    public Command cmdDecreaseVelocityP() { return cmdChangeVelocityP(1.0/1.02); }
 }
