@@ -5,13 +5,19 @@ import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_USING_ENCODER;
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_WITHOUT_ENCODER;
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.STOP_AND_RESET_ENCODER;
 import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE;
+import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.FLOAT;
+
+import android.util.Log;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.seattlesolvers.solverslib.command.Command;
+import com.seattlesolvers.solverslib.command.InstantCommand;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
+import com.seattlesolvers.solverslib.command.WaitUntilCommand;
+import com.seattlesolvers.solverslib.util.MathUtils;
 
 import org.firstinspires.ftc.teamcode.OverrideCommand;
 
@@ -197,5 +203,41 @@ public class GenericMotorSubsystem extends SubsystemBase {
                 moveTo(rotations.getAsDouble());
             }
         };
+    }
+
+    // Brakes or floats immediately, but does not change default behavior
+    private Command cmdBrakeOrFloat(DcMotor.ZeroPowerBehavior zeroPowerBehavior) {
+        return new OverrideCommand(this) {
+            @Override
+            public void initialize() {
+                setZeroPowerBehavior(zeroPowerBehavior);
+                switchModes(RUN_WITHOUT_ENCODER);
+                setPower(0);
+            }
+        };
+    }
+
+    public Command cmdWaitUntilInPosition(double rotationsTolerance) {
+        return new WaitUntilCommand
+                (() -> Math.abs((getMeasuredRotations() - lastRTPcounts.getRotations())) < rotationsTolerance);
+    }
+
+    private Command cmdChangePositionP(double scale) {
+        return new InstantCommand(() -> {
+            setMotorCoefficients(positionP*scale, positionPower, velocityP, velocityF);
+            Log.i("FTC20311", "Position p = "+positionP);
+        });
+    }
+
+    private Command cmdChangePositionPower(double amount) {
+        return new InstantCommand(() -> {
+            positionPower = MathUtils.clamp(positionPower+amount, 0, 1);
+            setMotorCoefficients(positionP, positionPower, velocityP, velocityF);
+            Log.i("FTC20311", "Position power = "+positionPower);
+        });
+    }
+
+    private Command cmdChangeVelocityP(double scale) {
+        return new InstantCommand(() -> setMotorCoefficients(positionP, positionPower, velocityP*scale, velocityF));
     }
 }
