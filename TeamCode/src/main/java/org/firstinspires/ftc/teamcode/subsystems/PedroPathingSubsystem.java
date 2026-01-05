@@ -28,7 +28,6 @@ public class PedroPathingSubsystem extends SubsystemBase {
         follower.update();
         try {
             Drawing.drawDebug(follower);
-            Drawing.sendPacket();
         } catch (Exception e) {
             Log.e("20311", "Attempting to draw the robot position in Panels dashboard failed.", e);
         }
