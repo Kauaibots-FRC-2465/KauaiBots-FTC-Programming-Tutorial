@@ -264,22 +264,22 @@ public class FlywheelSubsystem extends SubsystemBase {
 
     public Command cmdWaitLaunchEnd (int minimumRiseCount) {
         return new OverrideCommand() {
-            private double lastVelocity;
+            private double lastRPM;
             private int launchVelocityRiseCount;
 
             @Override
             public void initialize() {
-                lastVelocity= getMeasuredRPM();
+                lastRPM = getMeasuredRPM();
                 launchVelocityRiseCount = 0;
             }
 
             @Override
             public void execute() {
                 double measuredRPM = getMeasuredRPM();
-                if (measuredRPM > lastVelocity || isStable) {
+                if (measuredRPM > lastRPM || isStable) {
                     launchVelocityRiseCount++;
                 }
-                lastVelocity = measuredRPM;
+                lastRPM = measuredRPM;
             }
 
             @Override
