@@ -290,7 +290,7 @@ public class FlywheelSubsystem extends SubsystemBase {
         };
     }
 
-        public Command cmdUnjam(double power, double secondsPerReversal) {
+    public Command cmdUnjam(double power, double secondsPerReversal) {
         return new OverrideCommand(this) {
             private ElapsedTime elapsedTime = new ElapsedTime();
             private double unjamVoltage;
