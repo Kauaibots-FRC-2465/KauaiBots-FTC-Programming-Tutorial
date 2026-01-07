@@ -40,7 +40,7 @@ public class DecodeTeleop extends CommandOpMode {
         engineerGamepad = new GamepadEx(gamepad2);
         reorientButton = new GamepadButton(driverGamepad, GamepadKeys.Button.TRIANGLE); // aka Y
         driverCentricButton = new GamepadButton(driverGamepad, GamepadKeys.Button.CIRCLE); // aka B
-        unjamButton = new GamepadButton(driverGamepad, GamepadKeys.Button.PS); // AKA GUIDE (big geen x)
+        unjamButton = new GamepadButton(driverGamepad, GamepadKeys.Button.PS); // AKA GUIDE (big green X)
         Supplier<Float> fwdSupplier = () -> -gamepad1.left_stick_y;
         Supplier<Float> strafeSupplier = () -> -gamepad1.left_stick_x;
         Supplier<Float> turnSupplier = () -> -gamepad1.right_stick_x;
