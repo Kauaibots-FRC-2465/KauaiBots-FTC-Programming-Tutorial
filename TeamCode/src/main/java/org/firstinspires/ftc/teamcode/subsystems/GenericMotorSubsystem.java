@@ -31,7 +31,7 @@ public class GenericMotorSubsystem extends SubsystemBase {
         }
 
         double get() { return lastValue; }
-        int getAsInt() { return lastValueInSteps; }
+        int getAsSteps() { return lastValueInSteps; }
         double getRotations() { return lastValue/countsPerRotation; }
     }
 
